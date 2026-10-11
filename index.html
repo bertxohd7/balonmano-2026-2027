@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liga de balonmano - Solo lectura</title>
+<style>
+  :root{
+    --bg:#f7f7f8;--fg:#111;--muted:#666;--card:#fff;--border:#e6e6e6;--pri:#111;--pri-fore:#fff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial}
+  .container{max-width:1100px;margin:0 auto;padding:16px}
+  h1{margin-top:0;font-size:clamp(22px,3.5vw,30px)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:16px}
+  table{border-collapse:collapse;width:100%}
+  th,td{border-bottom:1px solid var(--border);text-align:left;padding:6px 8px}
+  thead th{background:#f0f0f2;font-weight:600}
+  .muted{color:var(--muted);font-size:14px}
+  .badge{display:inline-block;padding:2px 6px;border-radius:999px;font-size:11px;border:1px solid var(--border);margin-left:6px}
+  .flex{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  select{border:1px solid var(--border);border-radius:10px;padding:6px 8px;background:#fff;color:var(--fg)}
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="card">
+    <div class="flex">
+      <div>
+        <h1 id="leagueTitle">Liga de balonmano</h1>
+        <p class="muted" id="pointsInfo"></p>
+      </div>
+      <div>
+        <label class="muted" for="teamFilter"><b>Filtrar partidos por equipo</b></label><br>
+        <select id="teamFilter">
+          <option value="">Todos los equipos</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2 style="margin-top:0">Clasificación</h2>
+    <div style="overflow:auto">
+      <table id="tableStandings">
+        <thead>
+          <tr>
+            <th>Pos</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th>
+            <th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="muted" id="noStandingsMsg" style="display:none">No hay datos de clasificación.</p>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">Partidos</h2>
+    <div style="overflow:auto">
+      <table id="tableMatches">
+        <thead>
+          <tr>
+            <th>Fecha</th><th>Jornada</th><th>Local</th><th>Resultado</th><th>Visitante</th><th>Notas</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="muted" id="noMatchesMsg" style="display:none">No hay partidos registrados.</p>
+  </section>
+
+  <footer class="muted">
+    Vista solo lectura. Los datos provienen del archivo <code>liga.json</code>.
+  </footer>
+</div>
+
+<script>
+(async function(){
+  const $ = s => document.querySelector(s);
+
+  let data = null; // aquí guardaremos el JSON de la liga
+
+  async function loadData(){
+    try{
+      const res = await fetch('liga.json?_=' + Date.now());
+      if(!res.ok) throw new Error('No se pudo cargar liga.json');
+      data = await res.json();
+      renderAll();
+    }catch(err){
+      console.error(err);
+      $("#leagueTitle").textContent = "No se pudo cargar la liga";
+      $("#pointsInfo").textContent = "Revisa que el archivo liga.json esté junto a este viewer.html.";
+      $("#noStandingsMsg").style.display = "";
+      $("#noMatchesMsg").style.display = "";
+    }
+  }
+
+  function computeStandings(){
+    if(!data) return [];
+    const map = new Map();
+    const teams = data.teams || [];
+    const matches = data.matches || [];
+    const ptsW = Number(data.pointsWin ?? 3);
+    const ptsD = Number(data.pointsDraw ?? 1);
+    const ptsL = Number(data.pointsLoss ?? 0);
+
+    teams.forEach(t=>{
+      map.set(t.id,{ teamId:t.id, team:t.name, PJ:0,G:0,E:0,P:0,GF:0,GC:0,DG:0,Pts:0 });
+    });
+
+    matches.forEach(m=>{
+      if(!map.has(m.homeId) || !map.has(m.awayId)) return;
+      if(m.homeGoals==null || m.awayGoals==null) return;
+      const H = map.get(m.homeId);
+      const A = map.get(m.awayId);
+      H.PJ++; A.PJ++;
+      H.GF += m.homeGoals; H.GC += m.awayGoals;
+      A.GF += m.awayGoals; A.GC += m.homeGoals;
+      H.DG = H.GF - H.GC;
+      A.DG = A.GF - A.GC;
+      if(m.homeGoals > m.awayGoals){
+        H.G++; A.P++;
+        H.Pts += ptsW; A.Pts += ptsL;
+      }else if(m.homeGoals < m.awayGoals){
+        A.G++; H.P++;
+        A.Pts += ptsW; H.Pts += ptsL;
+      }else{
+        H.E++; A.E++;
+        H.Pts += ptsD; A.Pts += ptsD;
+      }
+    });
+
+    const arr = Array.from(map.values()).sort((a,b)=>{
+      if(b.Pts!==a.Pts) return b.Pts-a.Pts;
+      if(b.DG!==a.DG) return b.DG-a.DG;
+      if(b.GF!==a.GF) return b.GF-a.GF;
+      return a.team.localeCompare(b.team,"es");
+    });
+    return arr.map((r,i)=>Object.assign({Pos:i+1},r));
+  }
+
+  function renderStandings(){
+    const rows = computeStandings();
+    const tb = $("#tableStandings tbody");
+    tb.innerHTML = "";
+    if(rows.length===0){
+      $("#noStandingsMsg").style.display = "";
+      return;
+    }
+    $("#noStandingsMsg").style.display = "none";
+    rows.forEach(r=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.Pos}</td>
+        <td><b>${(r.team || "").replace(/</g,'&lt;')}</b></td>
+        <td>${r.PJ}</td><td>${r.G}</td><td>${r.E}</td><td>${r.P}</td>
+        <td>${r.GF}</td><td>${r.GC}</td><td>${r.DG}</td><td><b>${r.Pts}</b></td>
+      `;
+      tb.appendChild(tr);
+    });
+  }
+
+  function renderTeamFilter(){
+    const sel = $("#teamFilter");
+    if(!data || !sel) return;
+    const teams = data.teams || [];
+    sel.innerHTML = '<option value="">Todos los equipos</option>' +
+      teams
+        .slice()
+        .sort((a,b)=>a.name.localeCompare(b.name,"es"))
+        .map(t=>`<option value="${t.id}">${t.name.replace(/</g,'&lt;')}</option>`)
+        .join("");
+  }
+
+  function renderMatches(){
+    const tb = $("#tableMatches tbody");
+    const noMsg = $("#noMatchesMsg");
+    tb.innerHTML = "";
+
+    if(!data){
+      noMsg.style.display = "";
+      return;
+    }
+    const teamId = $("#teamFilter").value;
+    const teams = data.teams || [];
+    const matches = (data.matches || []).slice();
+
+    // ordenar por fecha (y jornada como desempate suave)
+    matches.sort((a,b)=>{
+      const da = a.date || "";
+      const db = b.date || "";
+      if(da !== db) return da.localeCompare(db);
+      const ra = (a.round || "").toString();
+      const rb = (b.round || "").toString();
+      return ra.localeCompare(rb,"es",{numeric:true});
+    });
+
+    const filtered = teamId
+      ? matches.filter(m=>m.homeId===teamId || m.awayId===teamId)
+      : matches;
+
+    if(filtered.length===0){
+      noMsg.style.display = "";
+      return;
+    }
+    noMsg.style.display = "none";
+
+    filtered.forEach(m=>{
+      const home = teams.find(t=>t.id===m.homeId)?.name || "?";
+      const away = teams.find(t=>t.id===m.awayId)?.name || "?";
+      const score = (m.homeGoals==null || m.awayGoals==null) ? "- : -" : (m.homeGoals + " : " + m.awayGoals);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${m.date || ""}</td>
+        <td>${m.round || ""}</td>
+        <td>${home.replace(/</g,'&lt;')}</td>
+        <td><b>${score}</b></td>
+        <td>${away.replace(/</g,'&lt;')}</td>
+        <td>${(m.note || "").replace(/</g,'&lt;')}</td>
+      `;
+      tb.appendChild(tr);
+    });
+  }
+
+  function renderHeader(){
+    if(!data) return;
+    $("#leagueTitle").textContent = data.leagueName || "Liga de balonmano";
+    const w = data.pointsWin ?? 3;
+    const d = data.pointsDraw ?? 1;
+    const l = data.pointsLoss ?? 0;
+    $("#pointsInfo").innerHTML =
+      `Sistema de puntos: ` +
+      `<span class="badge">Victoria: ${w}</span>` +
+      `<span class="badge">Empate: ${d}</span>` +
+      `<span class="badge">Derrota: ${l}</span>`;
+  }
+
+  function renderAll(){
+    renderHeader();
+    renderTeamFilter();
+    renderStandings();
+    renderMatches();
+  }
+
+  // cuando cambie el filtro de equipo, refrescamos partidos
+  $("#teamFilter").addEventListener("change", renderMatches);
+
+  // cargar datos al inicio
+  loadData();
+})();
+</script>
+</body>
+</html>
