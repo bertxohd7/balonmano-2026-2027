@@ -1,8 +1,101 @@
 {
-  "leagueName": "2026-20227 - Balonmano Mixto Cadete 2017",
-  "teams": [],
-  "matches": [],
+  "leagueName": "2025 - Balonmano Mixto Cadete 2017",
+  "teams": [
+    {
+      "id": "rw5jbhwc",
+      "name": "ANAITASUNA IKASTOLA LH4"
+    },
+    {
+      "id": "4p19r1ml",
+      "name": "ESKOLABARRI 2017"
+    },
+    {
+      "id": "00s7tl9q",
+      "name": "ARANGOITI"
+    },
+    {
+      "id": "ixv0utkj",
+      "name": "ESCOLAPIOS"
+    },
+    {
+      "id": "71nkmt0s",
+      "name": "AMPA BZG KUKULLAGA IKAS E"
+    },
+    {
+      "id": "gqock8b8",
+      "name": "KUKULLAGA ETXEBARRI 2017"
+    },
+    {
+      "id": "3kgh06oc",
+      "name": "EBB COOP BASAURI 2017"
+    },
+    {
+      "id": "oo5teqc9",
+      "name": "AMPA BZG KUKULLAGA IKAS F"
+    },
+    {
+      "id": "aqalccxc",
+      "name": "LOYOLA INDAUTXU"
+    },
+    {
+      "id": "h6pwlpi0",
+      "name": "BELTZAGORRI BENJAMIN"
+    }
+  ],
+  "matches": [
+    {
+      "id": "4735itdd",
+      "homeId": "h6pwlpi0",
+      "awayId": "4p19r1ml",
+      "homeGoals": null,
+      "awayGoals": null,
+      "date": "2026-10-17",
+      "round": "1",
+      "note": ""
+    },
+    {
+      "id": "nnpv1fdm",
+      "homeId": "rw5jbhwc",
+      "awayId": "00s7tl9q",
+      "homeGoals": null,
+      "awayGoals": null,
+      "date": "2026-10-17",
+      "round": "1",
+      "note": ""
+    },
+    {
+      "id": "xm1dhuao",
+      "homeId": "ixv0utkj",
+      "awayId": "aqalccxc",
+      "homeGoals": null,
+      "awayGoals": null,
+      "date": "2026-10-17",
+      "round": "1",
+      "note": ""
+    },
+    {
+      "id": "4mekdoww",
+      "homeId": "oo5teqc9",
+      "awayId": "71nkmt0s",
+      "homeGoals": null,
+      "awayGoals": null,
+      "date": "2026-10-17",
+      "round": "1",
+      "note": ""
+    },
+    {
+      "id": "yd1etljx",
+      "homeId": "gqock8b8",
+      "awayId": "3kgh06oc",
+      "homeGoals": null,
+      "awayGoals": null,
+      "date": "2026-10-17",
+      "round": "1",
+      "note": ""
+    }
+  ],
   "pointsWin": 3,
   "pointsDraw": 1,
-  "pointsLoss": 0
+  "pointsLoss": 0,
+  "editingMatchId": null
 }
