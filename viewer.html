@@ -31,6 +31,20 @@
   .result-win{background:#d8f5dc}
   .result-draw{background:#fff3bf}
   .result-loss{background:#ffd6e0}
+
+  .team-with-logo{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:180px;
+  }
+
+  .team-logo{
+    width:26px;
+    height:26px;
+    object-fit:contain;
+    flex:0 0 26px;
+  }
 </style>
 </head>
 
@@ -105,6 +119,44 @@
     return (data?.teams || [])
       .slice()
       .sort((a,b)=>a.name.localeCompare(b.name,"es",{sensitivity:"base"}));
+  }
+
+  function normalizeTeamName(name){
+    return (name || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g,"")
+      .toUpperCase()
+      .trim();
+  }
+
+  function getTeamLogo(name){
+    const n = normalizeTeamName(name);
+
+    if(n.includes("AMPA BZG KUKULLAGA IKAS")) return "logos/bzg.png";
+    if(n === "ARANGOITI") return "logos/arangoiti.png";
+    if(n.includes("BELTZAGORRI")) return "logos/beltzagorri.png";
+    if(n.includes("ESCOLAPIOS")) return "logos/escolapios.png";
+    if(n.includes("ESKOLABARRI")) return "logos/eskolabarri.png";
+    if(n.includes("KUKULLAGA ETXEBARRI")) return "logos/kukullaga.png";
+    if(n.includes("LOYOLA INDAUTXU")) return "logos/loyola.png";
+
+    return "";
+  }
+
+  function teamNameWithLogo(name){
+    const safeName = (name || "").replace(/</g,"&lt;");
+    const logo = getTeamLogo(name);
+
+    if(!logo){
+      return `<b>${safeName}</b>`;
+    }
+
+    return `
+      <span class="team-with-logo">
+        <img class="team-logo" src="${logo}" alt="" onerror="this.style.display='none'">
+        <b>${safeName}</b>
+      </span>
+    `;
   }
 
   async function loadData(){
@@ -224,7 +276,7 @@
 
       tr.innerHTML = `
         <td>${posText}</td>
-        <td><b>${(r.team || "").replace(/</g,'&lt;')}</b></td>
+        <td>${teamNameWithLogo(r.team)}</td>
         <td>${r.PJ}</td>
         <td>${r.G}</td>
         <td>${r.E}</td>
