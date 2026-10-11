@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>2026-2027 - Balonmano Mixto Cadete 2017</title>
+    <style>
+        :root {
+            --bg: #f7f7f8;
+            --fg: #111;
+            --muted: #666;
+            --card: #fff;
+            --border: #e6e6e6;
+            --pri: #111;
+            --pri-fore: #fff;
+            --accent: #0a7;
+            --red: #c62828;
+            --yellow: #b58900;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html, body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font: 16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 16px
+        }
+
+        .header {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            margin: 8px 0 16px
+        }
+
+        .title {
+            font-size: clamp(20px,3.2vw,28px);
+            font-weight: 800;
+            border: 0;
+            background: transparent;
+            padding: 4px 6px;
+            border-bottom: 2px solid var(--border);
+            width: 100%
+        }
+
+            .title:focus {
+                outline: none;
+                border-color: #333
+            }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        button, .btn {
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--fg);
+            padding: 8px 12px;
+            border-radius: 10px
+        }
+
+            button.primary {
+                background: var(--pri);
+                color: var(--pri-fore);
+                border-color: #000
+            }
+
+            button.danger {
+                background: #fee;
+                border-color: #f88;
+                color: #b00
+            }
+
+            button:hover {
+                filter: brightness(0.98)
+            }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin: 0 0 12px;
+            overflow: auto;
+            padding-bottom: 4px
+        }
+
+        .tab {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: #fff;
+            white-space: nowrap
+        }
+
+            .tab.active {
+                background: var(--pri);
+                color: #fff;
+                border-color: #000
+            }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,.04)
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        input, select {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: #fff;
+            color: var(--fg)
+        }
+
+            input[type=number] {
+                width: 100%
+            }
+
+        label {
+            font-size: 12px;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 4px
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%
+        }
+
+        th, td {
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            padding: 8px
+        }
+
+        thead th {
+            background: #f0f0f2;
+            font-weight: 600
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        .grid {
+            display: grid;
+            gap: 10px
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(2,minmax(0,1fr))
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(3,minmax(0,1fr))
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(4,minmax(0,1fr))
+        }
+
+        .right {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px
+        }
+
+        .footer {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: center;
+            margin: 18px 0
+        }
+
+        @media (max-width:720px) {
+            .grid-3, .grid-4 {
+                grid-template-columns: repeat(2,minmax(0,1fr))
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <input id="leagueName" class="title" aria-label="Nombre de la liga" />
+            <div class="toolbar">
+                <button id="btnExport">Exportar</button>
+                <label class="btn" style="cursor:pointer">
+                    Importar
+                    <input id="fileImport" type="file" accept="application/json" style="display:none">
+                </label>
+            </div>
+        </div>
+
+        <nav class="tabs">
+            <button class="tab active" data-tab="equipos">Equipos</button>
+            <button class="tab" data-tab="partidos">Partidos</button>
+            <button class="tab" data-tab="clasificacion">Clasificación</button>
+            <button class="tab" data-tab="ajustes">Ajustes</button>
+        </nav>
+
+        <section id="view-equipos" class="card">
+            <h2 style="margin-top:0">Gestión de equipos</h2>
+            <div class="row" style="margin-bottom:12px">
+                <input id="newTeamName" placeholder="Nombre del equipo" style="flex:1;min-width:220px">
+                <button id="btnAddTeam" class="primary">Añadir equipo</button>
+            </div>
+            <div id="teamsList" class="grid"></div>
+            <p id="noTeamsMsg" class="muted">Aún no hay equipos. Añádelos arriba.</p>
+        </section>
+
+        <section id="view-partidos" class="card" style="display:none">
+            <h2 style="margin-top:0">Partidos y resultados</h2>
+            <div class="grid grid-4" style="margin-bottom:10px">
+                <div><label>Local</label><select id="homeId"></select></div>
+                <div><label>Visitante</label><select id="awayId"></select></div>
+                <div><label>Goles Local</label><input type="number" id="homeGoals" min="0" placeholder="0"></div>
+                <div><label>Goles Visitante</label><input type="number" id="awayGoals" min="0" placeholder="0"></div>
+                <div><label>Fecha</label><input type="date" id="matchDate"></div>
+                <div><label>Jornada</label><input type="text" id="matchRound" placeholder="1, 2, ..."></div>
+                <div class="grid-2" style="grid-column: span 2">
+                    <div style="grid-column: span 2"><label>Notas (opcional)</label><input id="matchNote" placeholder="Pabellón, árbitro, observaciones…"></div>
+                </div>
+            </div>
+            <div class="row" style="margin-bottom:12px">
+                <button id="btnSaveMatch" class="primary">Añadir partido</button>
+                <button id="btnCancelEdit" style="display:none">Cancelar</button>
+            </div>
+            <div style="overflow:auto">
+                <table id="matchesTable">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Jornada</th>
+                            <th>Local</th>
+                            <th>Resultado</th>
+                            <th>Visitante</th>
+                            <th>Notas</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="view-clasificacion" class="card" style="display:none">
+            <h2 style="margin-top:0">Clasificación</h2>
+            <div style="overflow:auto">
+                <table id="tableStandings">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Equipo</th>
+                            <th>PJ</th>
+                            <th>G</th>
+                            <th>E</th>
+                            <th>P</th>
+                            <th>GF</th>
+                            <th>GC</th>
+                            <th>DG</th>
+                            <th>Pts</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <p class="muted" id="noStandingsMsg">Añade equipos y resultados para ver la clasificación.</p>
+        </section>
+
+        <section id="view-ajustes" class="card" style="display:none">
+            <h2 style="margin-top:0">Ajustes de la competición</h2>
+            <div class="grid grid-3" style="max-width:520px;margin-bottom:10px">
+                <div><label>Puntos por victoria</label><input type="number" id="ptsWin" min="0" value="3"></div>
+                <div><label>Puntos por empate</label><input type="number" id="ptsDraw" min="0" value="1"></div>
+                <div><label>Puntos por derrota</label><input type="number" id="ptsLoss" min="0" value="0"></div>
+            </div>
+            <div class="row">
+                <button id="btnReset" class="danger">Reiniciar liga</button>
+            </div>
+            <div class="card" style="margin-top:12px">
+                <b>Consejos</b>
+                <ul>
+                    <li>Ve a <b>Equipos</b> para dar de alta todos los equipos.</li>
+                    <li>Registra los <b>Partidos</b> (puedes dejar los goles vacíos hasta que se jueguen).</li>
+                    <li>Consulta la <b>Clasificación</b> que se actualiza automáticamente.</li>
+                    <li>Usa <b>Exportar</b> para guardar una copia y <b>Importar</b> para recuperarla o compartirla.</li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="footer">Funciona offline. Los datos se guardan en tu navegador (localStorage).</div>
+    </div>
+
+    <script>
+        (function () {
+            const STORAGE_KEY = "liga_infantil_2026_2027"
+
+            const $ = s => document.querySelector(s);
+            const $$ = s => Array.from(document.querySelectorAll(s));
+
+            let state = {
+                leagueName: "2025 - Balonmano Mixto Cadete 2017",
+                teams: [],
+                matches: [],
+                pointsWin: 3,
+                pointsDraw: 1,
+                pointsLoss: 0,
+                editingMatchId: null
+            };
+
+            function uid() { return Math.random().toString(36).slice(2, 10); }
+
+            function getSortedTeams() {
+                return state.teams
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }));
+            }
+
+            function loadState() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return;
+                    const s = JSON.parse(raw);
+                    if (!s) return;
+                    state = Object.assign(state, s);
+                } catch (e) { }
+            }
+
+            function saveState() {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                } catch (e) { }
+            }
+
+            function bindTabs() {
+                $$(".tab").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        $$(".tab").forEach(b => b.classList.remove("active"));
+                        btn.classList.add("active");
+                        const id = btn.dataset.tab;
+                        ["equipos", "partidos", "clasificacion", "ajustes"].forEach(v => {
+                            $("#view-" + v).style.display = (v === id) ? "" : "none";
+                        });
+                    });
+                });
+            }
+
+            function renderLeagueHeader() {
+                $("#leagueName").value = state.leagueName;
+            }
+
+            function renderTeams() {
+                const list = $("#teamsList");
+                list.innerHTML = "";
+                $("#noTeamsMsg").style.display = state.teams.length ? "none" : "block";
+
+                getSortedTeams().forEach(t => {
+                    const row = document.createElement("div");
+                    row.className = "row card";
+                    row.style.padding = "10px";
+                    row.style.marginBottom = "8px";
+                    row.innerHTML = `
+            <input data-id="${t.id}" class="inpTeamName" value="${t.name.replace(/"/g, '&quot;')}" style="flex:1;min-width:200px">
+            <button data-id="${t.id}" class="btnDelete">Borrar</button>
+          `;
+                    list.appendChild(row);
+                });
+
+                $$(".inpTeamName").forEach(inp => {
+                    inp.addEventListener("input", (e) => {
+                        const id = e.target.getAttribute("data-id");
+                        const name = e.target.value;
+                        const t = state.teams.find(x => x.id === id);
+                        if (t) {
+                            t.name = name;
+                            saveState();
+                            renderMatchesSelectors();
+                            renderStandings();
+                        }
+                    });
+                });
+
+                $$(".btnDelete").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        const id = btn.getAttribute("data-id");
+                        const used = state.matches.some(m => m.homeId === id || m.awayId === id);
+                        if (used) {
+                            alert("No puedes borrar un equipo con partidos registrados. Borra primero sus partidos.");
+                            return;
+                        }
+                        state.teams = state.teams.filter(t => t.id !== id);
+                        saveState();
+                        renderTeams();
+                        renderMatchesSelectors();
+                        renderStandings();
+                    });
+                });
+            }
+
+            function renderMatchesSelectors() {
+                const sortedTeams = getSortedTeams();
+
+                const opts = ['<option value="">— Selecciona equipo —</option>']
+                    .concat(sortedTeams.map(t => `<option value="${t.id}">${t.name.replace(/</g, '&lt;')}</option>`))
+                    .join("");
+
+                $("#homeId").innerHTML = opts;
+                $("#awayId").innerHTML = opts;
+            }
+
+            function renderMatchesTable() {
+                const tb = $("#matchesTable tbody");
+                tb.innerHTML = "";
+
+                if (state.matches.length === 0) {
+                    const tr = document.createElement("tr");
+                    const td = document.createElement("td");
+                    td.colSpan = 7;
+                    td.className = "muted";
+                    td.textContent = "Aún no hay partidos.";
+                    tr.appendChild(td);
+                    tb.appendChild(tr);
+                    return;
+                }
+
+                state.matches.forEach(m => {
+                    const home = state.teams.find(t => t.id === m.homeId)?.name || "?";
+                    const away = state.teams.find(t => t.id === m.awayId)?.name || "?";
+                    const tr = document.createElement("tr");
+                    const score = (m.homeGoals == null || m.awayGoals == null) ? "- : -" : (m.homeGoals + " : " + m.awayGoals);
+
+                    tr.innerHTML = `
+            <td>${m.date || ""}</td>
+            <td>${m.round || ""}</td>
+            <td>${home.replace(/</g, '&lt;')}</td>
+            <td><b>${score}</b></td>
+            <td>${away.replace(/</g, '&lt;')}</td>
+            <td>${(m.note || "").replace(/</g, '&lt;')}</td>
+            <td>
+              <button class="btnEdit" data-id="${m.id}">Editar</button>
+              <button class="btnDelMatch" data-id="${m.id}">Eliminar</button>
+            </td>
+          `;
+                    tb.appendChild(tr);
+                });
+
+                $$(".btnEdit").forEach(b => b.addEventListener("click", () => {
+                    const id = b.getAttribute("data-id");
+                    const m = state.matches.find(x => x.id === id);
+                    if (!m) return;
+
+                    state.editingMatchId = id;
+                    renderMatchesSelectors();
+
+                    $("#homeId").value = m.homeId;
+                    $("#awayId").value = m.awayId;
+                    $("#homeGoals").value = (m.homeGoals ?? "");
+                    $("#awayGoals").value = (m.awayGoals ?? "");
+                    $("#matchDate").value = m.date || "";
+                    $("#matchRound").value = m.round || "";
+                    $("#matchNote").value = m.note || "";
+                    $("#btnSaveMatch").textContent = "Guardar cambios";
+                    $("#btnCancelEdit").style.display = "";
+                    document.querySelector('[data-tab="partidos"]').click();
+                }));
+
+                $$(".btnDelMatch").forEach(b => b.addEventListener("click", () => {
+                    const id = b.getAttribute("data-id");
+                    if (!confirm("¿Eliminar este partido?")) return;
+                    state.matches = state.matches.filter(x => x.id !== id);
+                    saveState();
+                    renderMatchesTable();
+                    renderStandings();
+                }));
+            }
+
+            function computeStandings() {
+                const map = new Map();
+
+                state.teams.forEach(t => {
+                    map.set(t.id, { teamId: t.id, team: t.name, PJ: 0, G: 0, E: 0, P: 0, GF: 0, GC: 0, DG: 0, Pts: 0 });
+                });
+
+                state.matches.forEach(m => {
+                    if (!map.has(m.homeId) || !map.has(m.awayId)) return;
+                    if (m.homeGoals == null || m.awayGoals == null) return;
+
+                    const H = map.get(m.homeId);
+                    const A = map.get(m.awayId);
+
+                    H.PJ++;
+                    A.PJ++;
+
+                    H.GF += m.homeGoals;
+                    H.GC += m.awayGoals;
+
+                    A.GF += m.awayGoals;
+                    A.GC += m.homeGoals;
+
+                    H.DG = H.GF - H.GC;
+                    A.DG = A.GF - A.GC;
+
+                    if (m.homeGoals > m.awayGoals) {
+                        H.G++;
+                        A.P++;
+                        H.Pts += state.pointsWin;
+                        A.Pts += state.pointsLoss;
+                    } else if (m.homeGoals < m.awayGoals) {
+                        A.G++;
+                        H.P++;
+                        A.Pts += state.pointsWin;
+                        H.Pts += state.pointsLoss;
+                    } else {
+                        H.E++;
+                        A.E++;
+                        H.Pts += state.pointsDraw;
+                        A.Pts += state.pointsDraw;
+                    }
+                });
+
+                const arr = Array.from(map.values()).sort((a, b) => {
+                    if (b.Pts !== a.Pts) return b.Pts - a.Pts;
+                    if (b.DG !== a.DG) return b.DG - a.DG;
+                    if (b.GF !== a.GF) return b.GF - a.GF;
+                    return a.team.localeCompare(b.team, "es", { sensitivity: "base" });
+                });
+
+                return arr.map((r, i) => Object.assign({ Pos: i + 1 }, r));
+            }
+
+            function renderStandings() {
+                const rows = computeStandings();
+                const tb = $("#tableStandings tbody");
+                tb.innerHTML = "";
+
+                if (rows.length === 0) {
+                    $("#noStandingsMsg").style.display = "block";
+                    return;
+                }
+
+                $("#noStandingsMsg").style.display = "none";
+
+                rows.forEach(r => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+            <td>${r.Pos}</td>
+            <td><b>${r.team.replace(/</g, '&lt;')}</b></td>
+            <td>${r.PJ}</td>
+            <td>${r.G}</td>
+            <td>${r.E}</td>
+            <td>${r.P}</td>
+            <td>${r.GF}</td>
+            <td>${r.GC}</td>
+            <td>${r.DG}</td>
+            <td><b>${r.Pts}</b></td>
+          `;
+                    tb.appendChild(tr);
+                });
+            }
+
+            function wireEvents() {
+                $("#leagueName").addEventListener("input", e => {
+                    state.leagueName = e.target.value;
+                    saveState();
+                });
+
+                $("#btnAddTeam").addEventListener("click", () => {
+                    const name = $("#newTeamName").value.trim();
+                    if (!name) return;
+
+                    if (state.teams.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+                        alert("Ese equipo ya existe.");
+                        return;
+                    }
+
+                    state.teams.push({ id: uid(), name });
+                    $("#newTeamName").value = "";
+                    saveState();
+                    renderTeams();
+                    renderMatchesSelectors();
+                    renderStandings();
+                });
+
+                $("#btnSaveMatch").addEventListener("click", () => {
+                    const homeId = $("#homeId").value;
+                    const awayId = $("#awayId").value;
+
+                    if (!homeId || !awayId || homeId === awayId) {
+                        alert("Selecciona equipos distintos para local y visitante.");
+                        return;
+                    }
+
+                    const hgRaw = $("#homeGoals").value.trim();
+                    const agRaw = $("#awayGoals").value.trim();
+
+                    const hg = hgRaw === "" ? null : Number(hgRaw);
+                    const ag = agRaw === "" ? null : Number(agRaw);
+
+                    if ((hg !== null && (!Number.isFinite(hg) || hg < 0)) || (ag !== null && (!Number.isFinite(ag) || ag < 0))) {
+                        alert("Los goles deben ser enteros ≥ 0 o dejarse en blanco.");
+                        return;
+                    }
+
+                    const payload = {
+                        id: state.editingMatchId || uid(),
+                        homeId,
+                        awayId,
+                        homeGoals: hg,
+                        awayGoals: ag,
+                        date: $("#matchDate").value || "",
+                        round: $("#matchRound").value || "",
+                        note: $("#matchNote").value || ""
+                    };
+
+                    if (state.editingMatchId) {
+                        state.matches = state.matches.map(m => m.id === state.editingMatchId ? payload : m);
+                    } else {
+                        state.matches.push(payload);
+                    }
+
+                    state.editingMatchId = null;
+                    $("#btnSaveMatch").textContent = "Añadir partido";
+                    $("#btnCancelEdit").style.display = "none";
+
+                    $("#homeId").value = "";
+                    $("#awayId").value = "";
+                    $("#homeGoals").value = "";
+                    $("#awayGoals").value = "";
+                    $("#matchDate").value = "";
+                    $("#matchRound").value = "";
+                    $("#matchNote").value = "";
+
+                    saveState();
+                    renderMatchesTable();
+                    renderStandings();
+                });
+
+                $("#btnCancelEdit").addEventListener("click", () => {
+                    state.editingMatchId = null;
+                    $("#btnSaveMatch").textContent = "Añadir partido";
+                    $("#btnCancelEdit").style.display = "none";
+
+                    $("#homeId").value = "";
+                    $("#awayId").value = "";
+                    $("#homeGoals").value = "";
+                    $("#awayGoals").value = "";
+                    $("#matchDate").value = "";
+                    $("#matchRound").value = "";
+                    $("#matchNote").value = "";
+                });
+
+                $("#ptsWin").addEventListener("input", e => {
+                    state.pointsWin = Number(e.target.value || 0);
+                    saveState();
+                    renderStandings();
+                });
+
+                $("#ptsDraw").addEventListener("input", e => {
+                    state.pointsDraw = Number(e.target.value || 0);
+                    saveState();
+                    renderStandings();
+                });
+
+                $("#ptsLoss").addEventListener("input", e => {
+                    state.pointsLoss = Number(e.target.value || 0);
+                    saveState();
+                    renderStandings();
+                });
+
+                $("#btnReset").addEventListener("click", () => {
+                    if (!confirm("Esto borrará todos los equipos y partidos. ¿Seguro?")) return;
+
+                    state.teams = [];
+                    state.matches = [];
+                    saveState();
+
+                    renderTeams();
+                    renderMatchesSelectors();
+                    renderMatchesTable();
+                    renderStandings();
+                });
+
+                $("#btnExport").addEventListener("click", () => {
+                    const data = JSON.stringify(state, null, 2);
+                    const blob = new Blob([data], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+
+                    a.href = url;
+                    const name = (state.leagueName || "liga").replace(/\s+/g, "_");
+                    a.download = name + ".json";
+                    a.click();
+
+                    URL.revokeObjectURL(url);
+                });
+
+                $("#fileImport").addEventListener("change", async (e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+
+                    const text = await f.text();
+
+                    try {
+                        const s = JSON.parse(text);
+                        if (!s) throw new Error("JSON inválido");
+
+                        state.leagueName = s.leagueName || state.leagueName;
+                        state.teams = Array.isArray(s.teams) ? s.teams : [];
+                        state.matches = Array.isArray(s.matches) ? s.matches : [];
+
+                        state.pointsWin = Number.isFinite(s.pointsWin) ? s.pointsWin : state.pointsWin;
+                        state.pointsDraw = Number.isFinite(s.pointsDraw) ? s.pointsDraw : state.pointsDraw;
+                        state.pointsLoss = Number.isFinite(s.pointsLoss) ? s.pointsLoss : state.pointsLoss;
+
+                        saveState();
+
+                        renderLeagueHeader();
+                        $("#ptsWin").value = state.pointsWin;
+                        $("#ptsDraw").value = state.pointsDraw;
+                        $("#ptsLoss").value = state.pointsLoss;
+
+                        renderTeams();
+                        renderMatchesSelectors();
+                        renderMatchesTable();
+                        renderStandings();
+
+                        alert("Importación completada.");
+                    } catch (err) {
+                        alert("No se pudo importar el archivo: " + (err && err.message ? err.message : err));
+                    } finally {
+                        e.target.value = "";
+                    }
+                });
+            }
+
+            function init() {
+                loadState();
+                renderLeagueHeader();
+                bindTabs();
+                wireEvents();
+
+                $("#ptsWin").value = state.pointsWin;
+                $("#ptsDraw").value = state.pointsDraw;
+                $("#ptsLoss").value = state.pointsLoss;
+
+                renderTeams();
+                renderMatchesSelectors();
+                renderMatchesTable();
+                renderStandings();
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
