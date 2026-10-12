@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>2026-2027 - Balonmano Mixto Cadete 2017</title>
+    <title>2025 - Balonmano Mixto Cadete 2017</title>
     <style>
         :root {
             --bg: #f7f7f8;
@@ -246,7 +246,8 @@
                 <div><label>Fecha</label><input type="date" id="matchDate"></div>
                 <div><label>Hora</label><input type="time" id="matchTime"></div>
                 <div><label>Jornada</label><input type="text" id="matchRound" placeholder="1, 2, ..."></div>
-                <div><label>Lugar / Pabellón</label><input type="text" id="matchVenue" placeholder="Polideportivo, colegio..."></div>
+                <div><label>Lugar / Pabellón</label><input type="text" id="matchVenue" placeholder="Vacío = campo habitual del local"></div>
+                <div style="grid-column: span 2"><label>Enlace Google Maps (opcional)</label><input type="url" id="matchMapsUrl" placeholder="Vacío = mapa habitual del local" style="width:100%"></div>
                 <div class="grid-2" style="grid-column: span 4">
                     <div style="grid-column: span 2"><label>Notas (opcional)</label><input id="matchNote" placeholder="Árbitro, observaciones…"></div>
                 </div>
@@ -266,6 +267,7 @@
                             <th>Resultado</th>
                             <th>Visitante</th>
                             <th>Lugar</th>
+                            <th>Mapa</th>
                             <th>Notas</th>
                             <th>Acciones</th>
                         </tr>
@@ -392,7 +394,18 @@
                     row.style.padding = "10px";
                     row.style.marginBottom = "8px";
                     row.innerHTML = `
-            <input data-id="${t.id}" class="inpTeamName" value="${t.name.replace(/"/g, '&quot;')}" style="flex:1;min-width:200px">
+            <div style="flex:1;min-width:220px">
+              <label>Equipo</label>
+              <input data-id="${t.id}" class="inpTeamName" value="${t.name.replace(/"/g, '&quot;')}" style="width:100%">
+            </div>
+            <div style="flex:2;min-width:280px">
+              <label>Campo habitual</label>
+              <input data-id="${t.id}" class="inpTeamVenue" value="${(t.venue || "").replace(/"/g, '&quot;')}" placeholder="Nombre y dirección" style="width:100%">
+            </div>
+            <div style="flex:2;min-width:280px">
+              <label>Enlace Google Maps</label>
+              <input data-id="${t.id}" class="inpTeamMaps" value="${(t.mapsUrl || "").replace(/"/g, '&quot;')}" placeholder="https://maps.google.com/..." style="width:100%">
+            </div>
             <button data-id="${t.id}" class="btnDelete">Borrar</button>
           `;
                     list.appendChild(row);
@@ -408,6 +421,28 @@
                             saveState();
                             renderMatchesSelectors();
                             renderStandings();
+                        }
+                    });
+                });
+
+                $$(".inpTeamVenue").forEach(inp => {
+                    inp.addEventListener("input", (e) => {
+                        const id = e.target.getAttribute("data-id");
+                        const t = state.teams.find(x => x.id === id);
+                        if (t) {
+                            t.venue = e.target.value;
+                            saveState();
+                        }
+                    });
+                });
+
+                $$(".inpTeamMaps").forEach(inp => {
+                    inp.addEventListener("input", (e) => {
+                        const id = e.target.getAttribute("data-id");
+                        const t = state.teams.find(x => x.id === id);
+                        if (t) {
+                            t.mapsUrl = e.target.value;
+                            saveState();
                         }
                     });
                 });
@@ -440,6 +475,16 @@
                 $("#awayId").innerHTML = opts;
             }
 
+            function getEffectiveVenue(m) {
+                const home = state.teams.find(t => t.id === m.homeId);
+                return (m.venue || "").trim() || (home?.venue || "").trim();
+            }
+
+            function getEffectiveMapsUrl(m) {
+                const home = state.teams.find(t => t.id === m.homeId);
+                return (m.mapsUrl || "").trim() || (home?.mapsUrl || "").trim();
+            }
+
             function renderMatchesTable() {
                 const tb = $("#matchesTable tbody");
                 tb.innerHTML = "";
@@ -447,7 +492,7 @@
                 if (state.matches.length === 0) {
                     const tr = document.createElement("tr");
                     const td = document.createElement("td");
-                    td.colSpan = 9;
+                    td.colSpan = 10;
                     td.className = "muted";
                     td.textContent = "Aún no hay partidos.";
                     tr.appendChild(td);
@@ -468,7 +513,8 @@
             <td>${home.replace(/</g, '&lt;')}</td>
             <td><b>${score}</b></td>
             <td>${away.replace(/</g, '&lt;')}</td>
-            <td>${(m.venue || "").replace(/</g, '&lt;')}</td>
+            <td>${getEffectiveVenue(m).replace(/</g, '&lt;')}</td>
+            <td>${getEffectiveMapsUrl(m) ? `<a href="${getEffectiveMapsUrl(m).replace(/"/g, '&quot;')}" target="_blank" rel="noopener">📍 Mapa</a>` : ""}</td>
             <td>${(m.note || "").replace(/</g, '&lt;')}</td>
             <td>
               <button class="btnEdit" data-id="${m.id}">Editar</button>
@@ -494,6 +540,7 @@
                     $("#matchTime").value = m.time || "";
                     $("#matchRound").value = m.round || "";
                     $("#matchVenue").value = m.venue || "";
+                    $("#matchMapsUrl").value = m.mapsUrl || "";
                     $("#matchNote").value = m.note || "";
                     $("#btnSaveMatch").textContent = "Guardar cambios";
                     $("#btnCancelEdit").style.display = "";
@@ -609,7 +656,7 @@
                         return;
                     }
 
-                    state.teams.push({ id: uid(), name });
+                    state.teams.push({ id: uid(), name, venue: "", mapsUrl: "" });
                     $("#newTeamName").value = "";
                     saveState();
                     renderTeams();
@@ -647,6 +694,7 @@
                         time: $("#matchTime").value || "",
                         round: $("#matchRound").value || "",
                         venue: $("#matchVenue").value || "",
+                        mapsUrl: $("#matchMapsUrl").value || "",
                         note: $("#matchNote").value || ""
                     };
 
@@ -668,6 +716,7 @@
                     $("#matchTime").value = "";
                     $("#matchRound").value = "";
                     $("#matchVenue").value = "";
+                    $("#matchMapsUrl").value = "";
                     $("#matchNote").value = "";
 
                     saveState();
@@ -688,6 +737,7 @@
                     $("#matchTime").value = "";
                     $("#matchRound").value = "";
                     $("#matchVenue").value = "";
+                    $("#matchMapsUrl").value = "";
                     $("#matchNote").value = "";
                 });
 
@@ -747,8 +797,17 @@
                         if (!s) throw new Error("JSON inválido");
 
                         state.leagueName = s.leagueName || state.leagueName;
-                        state.teams = Array.isArray(s.teams) ? s.teams : [];
-                        state.matches = Array.isArray(s.matches) ? s.matches : [];
+                        state.teams = Array.isArray(s.teams) ? s.teams.map(t => ({
+                            ...t,
+                            venue: t.venue || "",
+                            mapsUrl: t.mapsUrl || ""
+                        })) : [];
+                        state.matches = Array.isArray(s.matches) ? s.matches.map(m => ({
+                            ...m,
+                            time: m.time || "",
+                            venue: m.venue || "",
+                            mapsUrl: m.mapsUrl || ""
+                        })) : [];
 
                         state.pointsWin = Number.isFinite(s.pointsWin) ? s.pointsWin : state.pointsWin;
                         state.pointsDraw = Number.isFinite(s.pointsDraw) ? s.pointsDraw : state.pointsDraw;
