@@ -45,6 +45,55 @@
     object-fit:contain;
     flex:0 0 26px;
   }
+
+  .venue-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    min-width:150px;
+  }
+
+  .venue-top{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .venue-name{
+    font-weight:600;
+  }
+
+  .venue-toggle{
+    border:0;
+    background:transparent;
+    padding:0;
+    font:inherit;
+    cursor:pointer;
+    text-decoration:underline;
+    opacity:.8;
+  }
+
+  .venue-address{
+    display:none;
+    font-size:12px;
+    line-height:1.35;
+    opacity:.85;
+  }
+
+  .venue-address.show{
+    display:block;
+  }
+
+  @media (min-width: 900px){
+    .venue-address{
+      display:block;
+    }
+    .venue-toggle{
+      display:none;
+    }
+  }
+
 </style>
 </head>
 
@@ -104,7 +153,7 @@
 
   <footer class="muted">
     Vista solo lectura. Los datos provienen del archivo <code>liga.json</code>.
-    <br>Versión: <b>2026.10.12.2</b>
+    <br>Versión: <b>2026.10.12.3</b>
   </footer>
 </div>
 
@@ -133,15 +182,15 @@
   function getTeamLogo(name){
     const n = normalizeTeamName(name);
 
-    if(n.includes("AMPA BZG KUKULLAGA IKAS")) return "logos/bzg.png?v=2026.10.12.2";
-    if(n.includes("ANAITASUNA IKASTOLA")) return "logos/anaitasuna_club.png?v=2026.10.12.2";
-    if(n.includes("EBB COOP BASAURI")) return "logos/coop_basauri.png?v=2026.10.12.2";
-    if(n === "ARANGOITI") return "logos/arangoiti.png?v=2026.10.12.2";
-    if(n.includes("BELTZAGORRI")) return "logos/beltzagorri.png?v=2026.10.12.2";
-    if(n.includes("ESCOLAPIOS")) return "logos/escolapios.png?v=2026.10.12.2";
-    if(n.includes("ESKOLABARRI")) return "logos/eskolabarri.png?v=2026.10.12.2";
-    if(n.includes("KUKULLAGA ETXEBARRI")) return "logos/kukullaga.png?v=2026.10.12.2";
-    if(n.includes("LOYOLA INDAUTXU")) return "logos/loyola.png?v=2026.10.12.2";
+    if(n.includes("AMPA BZG KUKULLAGA IKAS")) return "logos/bzg.png?v=2026.10.12.3";
+    if(n.includes("ANAITASUNA IKASTOLA")) return "logos/anaitasuna_club.png?v=2026.10.12.3";
+    if(n.includes("EBB COOP BASAURI")) return "logos/coop_basauri.png?v=2026.10.12.3";
+    if(n === "ARANGOITI") return "logos/arangoiti.png?v=2026.10.12.3";
+    if(n.includes("BELTZAGORRI")) return "logos/beltzagorri.png?v=2026.10.12.3";
+    if(n.includes("ESCOLAPIOS")) return "logos/escolapios.png?v=2026.10.12.3";
+    if(n.includes("ESKOLABARRI")) return "logos/eskolabarri.png?v=2026.10.12.3";
+    if(n.includes("KUKULLAGA ETXEBARRI")) return "logos/kukullaga.png?v=2026.10.12.3";
+    if(n.includes("LOYOLA INDAUTXU")) return "logos/loyola.png?v=2026.10.12.3";
 
     return "";
   }
@@ -317,6 +366,71 @@
     return (match.mapsUrl || "").trim() || (home?.mapsUrl || "").trim();
   }
 
+  function splitVenue(venue){
+    const text = (venue || "").trim();
+    if(!text) return { name:"", address:"" };
+
+    const patterns = [
+      /\s+(Calle|C\/|Carrer|Kalea|Avenida|Av\.|Alameda|Zumarkalea|Plaza|Paseo|Camino|Carretera|Barrio)\b/i,
+      /,\s*(\d{5})\b/
+    ];
+
+    let idx = -1;
+    for(const p of patterns){
+      const m = text.match(p);
+      if(m && m.index > 0){
+        idx = m.index;
+        break;
+      }
+    }
+
+    if(idx > 0){
+      return {
+        name: text.slice(0, idx).trim().replace(/[,.]$/, ""),
+        address: text.slice(idx).trim().replace(/^,\s*/, "")
+      };
+    }
+
+    const comma = text.indexOf(",");
+    if(comma > 0){
+      return {
+        name: text.slice(0, comma).trim(),
+        address: text.slice(comma + 1).trim()
+      };
+    }
+
+    return { name:text, address:"" };
+  }
+
+  function escapeHtml(s){
+    return (s || "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;");
+  }
+
+  function venueHtml(match){
+    const venue = getEffectiveVenue(match);
+    const parts = splitVenue(venue);
+    if(!parts.name && !parts.address) return "";
+
+    const id = "addr_" + match.id;
+    const toggle = parts.address
+      ? `<button class="venue-toggle" type="button" data-target="${id}">Ver dirección</button>`
+      : "";
+
+    return `
+      <div class="venue-wrap">
+        <div class="venue-top">
+          <span class="venue-name">${escapeHtml(parts.name)}</span>
+          ${toggle}
+        </div>
+        ${parts.address ? `<div class="venue-address" id="${id}">${escapeHtml(parts.address)}</div>` : ""}
+      </div>
+    `;
+  }
+
   function renderMatches(){
     const tb = $("#tableMatches tbody");
     const noMsg = $("#noMatchesMsg");
@@ -387,13 +501,23 @@
         <td>${home.replace(/</g,'&lt;')}</td>
         <td><b>${score}</b></td>
         <td>${away.replace(/</g,'&lt;')}</td>
-        <td>${getEffectiveVenue(m).replace(/</g,'&lt;')}</td>
+        <td>${venueHtml(m)}</td>
         <td>${getEffectiveMapsUrl(m) ? `<a href="${getEffectiveMapsUrl(m).replace(/"/g,'&quot;')}" target="_blank" rel="noopener">📍 Mapa</a>` : ""}</td>
         <td>${(m.note || "").replace(/</g,'&lt;')}</td>
       `;
 
       tb.appendChild(tr);
     });
+
+    document.querySelectorAll(".venue-toggle").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const el = document.getElementById(btn.dataset.target);
+        if(!el) return;
+        const open = el.classList.toggle("show");
+        btn.textContent = open ? "Ocultar dirección" : "Ver dirección";
+      });
+    });
+
   }
 
   function renderHeader(){
