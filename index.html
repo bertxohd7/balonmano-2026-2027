@@ -93,7 +93,7 @@
       <table id="tableMatches">
         <thead>
           <tr>
-            <th>Fecha</th><th>Jornada</th><th>Local</th><th>Resultado</th><th>Visitante</th><th>Notas</th>
+            <th>Fecha</th><th>Hora</th><th>Jornada</th><th>Local</th><th>Resultado</th><th>Visitante</th><th>Lugar</th><th>Notas</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -104,7 +104,7 @@
 
   <footer class="muted">
     Vista solo lectura. Los datos provienen del archivo <code>liga.json</code>.
-    <br>Versión: <b>2026.10.11.3</b>
+    <br>Versión: <b>2026.10.12.1</b>
   </footer>
 </div>
 
@@ -133,15 +133,15 @@
   function getTeamLogo(name){
     const n = normalizeTeamName(name);
 
-    if(n.includes("AMPA BZG KUKULLAGA IKAS")) return "logos/bzg.png?v=2026.10.11.3";
-    if(n.includes("ANAITASUNA IKASTOLA")) return "logos/anaitasuna_club.png?v=2026.10.11.3";
-    if(n.includes("EBB COOP BASAURI")) return "logos/coop_basauri.png?v=2026.10.11.3";
-    if(n === "ARANGOITI") return "logos/arangoiti.png?v=2026.10.11.3";
-    if(n.includes("BELTZAGORRI")) return "logos/beltzagorri.png?v=2026.10.11.3";
-    if(n.includes("ESCOLAPIOS")) return "logos/escolapios.png?v=2026.10.11.3";
-    if(n.includes("ESKOLABARRI")) return "logos/eskolabarri.png?v=2026.10.11.3";
-    if(n.includes("KUKULLAGA ETXEBARRI")) return "logos/kukullaga.png?v=2026.10.11.3";
-    if(n.includes("LOYOLA INDAUTXU")) return "logos/loyola.png?v=2026.10.11.3";
+    if(n.includes("AMPA BZG KUKULLAGA IKAS")) return "logos/bzg.png?v=2026.10.12.1";
+    if(n.includes("ANAITASUNA IKASTOLA")) return "logos/anaitasuna_club.png?v=2026.10.12.1";
+    if(n.includes("EBB COOP BASAURI")) return "logos/coop_basauri.png?v=2026.10.12.1";
+    if(n === "ARANGOITI") return "logos/arangoiti.png?v=2026.10.12.1";
+    if(n.includes("BELTZAGORRI")) return "logos/beltzagorri.png?v=2026.10.12.1";
+    if(n.includes("ESCOLAPIOS")) return "logos/escolapios.png?v=2026.10.12.1";
+    if(n.includes("ESKOLABARRI")) return "logos/eskolabarri.png?v=2026.10.12.1";
+    if(n.includes("KUKULLAGA ETXEBARRI")) return "logos/kukullaga.png?v=2026.10.12.1";
+    if(n.includes("LOYOLA INDAUTXU")) return "logos/loyola.png?v=2026.10.12.1";
 
     return "";
   }
@@ -372,10 +372,12 @@
 
       tr.innerHTML = `
         <td>${m.date || ""}</td>
+        <td>${m.time || ""}</td>
         <td>${m.round || ""}</td>
         <td>${home.replace(/</g,'&lt;')}</td>
         <td><b>${score}</b></td>
         <td>${away.replace(/</g,'&lt;')}</td>
+        <td>${(m.venue || "").replace(/</g,'&lt;')}</td>
         <td>${(m.note || "").replace(/</g,'&lt;')}</td>
       `;
 
