@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>2026-2027 - Balonmano Mixto Cadete 2017</title>
+    <title>2025 - Balonmano Mixto Cadete 2017</title>
     <style>
         :root {
             --bg: #f7f7f8;
@@ -244,9 +244,11 @@
                 <div><label>Goles Local</label><input type="number" id="homeGoals" min="0" placeholder="0"></div>
                 <div><label>Goles Visitante</label><input type="number" id="awayGoals" min="0" placeholder="0"></div>
                 <div><label>Fecha</label><input type="date" id="matchDate"></div>
+                <div><label>Hora</label><input type="time" id="matchTime"></div>
                 <div><label>Jornada</label><input type="text" id="matchRound" placeholder="1, 2, ..."></div>
-                <div class="grid-2" style="grid-column: span 2">
-                    <div style="grid-column: span 2"><label>Notas (opcional)</label><input id="matchNote" placeholder="Pabellón, árbitro, observaciones…"></div>
+                <div><label>Lugar / Pabellón</label><input type="text" id="matchVenue" placeholder="Polideportivo, colegio..."></div>
+                <div class="grid-2" style="grid-column: span 4">
+                    <div style="grid-column: span 2"><label>Notas (opcional)</label><input id="matchNote" placeholder="Árbitro, observaciones…"></div>
                 </div>
             </div>
             <div class="row" style="margin-bottom:12px">
@@ -258,10 +260,12 @@
                     <thead>
                         <tr>
                             <th>Fecha</th>
+                            <th>Hora</th>
                             <th>Jornada</th>
                             <th>Local</th>
                             <th>Resultado</th>
                             <th>Visitante</th>
+                            <th>Lugar</th>
                             <th>Notas</th>
                             <th>Acciones</th>
                         </tr>
@@ -321,13 +325,13 @@
 
     <script>
         (function () {
-            const STORAGE_KEY = "liga_infantil_2026_2027"
+            const STORAGE_KEY = "liga_infantil_2026_2027";
 
             const $ = s => document.querySelector(s);
             const $$ = s => Array.from(document.querySelectorAll(s));
 
             let state = {
-                leagueName: "2025 - Balonmano Mixto Cadete 2017",
+                leagueName: "2026-2027 - Balonmano Mixto",
                 teams: [],
                 matches: [],
                 pointsWin: 3,
@@ -443,7 +447,7 @@
                 if (state.matches.length === 0) {
                     const tr = document.createElement("tr");
                     const td = document.createElement("td");
-                    td.colSpan = 7;
+                    td.colSpan = 9;
                     td.className = "muted";
                     td.textContent = "Aún no hay partidos.";
                     tr.appendChild(td);
@@ -459,10 +463,12 @@
 
                     tr.innerHTML = `
             <td>${m.date || ""}</td>
+            <td>${m.time || ""}</td>
             <td>${m.round || ""}</td>
             <td>${home.replace(/</g, '&lt;')}</td>
             <td><b>${score}</b></td>
             <td>${away.replace(/</g, '&lt;')}</td>
+            <td>${(m.venue || "").replace(/</g, '&lt;')}</td>
             <td>${(m.note || "").replace(/</g, '&lt;')}</td>
             <td>
               <button class="btnEdit" data-id="${m.id}">Editar</button>
@@ -485,7 +491,9 @@
                     $("#homeGoals").value = (m.homeGoals ?? "");
                     $("#awayGoals").value = (m.awayGoals ?? "");
                     $("#matchDate").value = m.date || "";
+                    $("#matchTime").value = m.time || "";
                     $("#matchRound").value = m.round || "";
+                    $("#matchVenue").value = m.venue || "";
                     $("#matchNote").value = m.note || "";
                     $("#btnSaveMatch").textContent = "Guardar cambios";
                     $("#btnCancelEdit").style.display = "";
@@ -636,7 +644,9 @@
                         homeGoals: hg,
                         awayGoals: ag,
                         date: $("#matchDate").value || "",
+                        time: $("#matchTime").value || "",
                         round: $("#matchRound").value || "",
+                        venue: $("#matchVenue").value || "",
                         note: $("#matchNote").value || ""
                     };
 
@@ -655,7 +665,9 @@
                     $("#homeGoals").value = "";
                     $("#awayGoals").value = "";
                     $("#matchDate").value = "";
+                    $("#matchTime").value = "";
                     $("#matchRound").value = "";
+                    $("#matchVenue").value = "";
                     $("#matchNote").value = "";
 
                     saveState();
@@ -673,7 +685,9 @@
                     $("#homeGoals").value = "";
                     $("#awayGoals").value = "";
                     $("#matchDate").value = "";
+                    $("#matchTime").value = "";
                     $("#matchRound").value = "";
+                    $("#matchVenue").value = "";
                     $("#matchNote").value = "";
                 });
 
