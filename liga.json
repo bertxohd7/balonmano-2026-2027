@@ -1,5 +1,5 @@
 {
-  "leagueName": "2026-2027 - Balonmano Mixto Cadete 2017",
+  "leagueName": "Temporada 2026-2027  Balonmano Mixto Cadete 2017",
   "teams": [
     {
       "id": "rw5jbhwc",
@@ -50,7 +50,9 @@
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-10-17",
+      "time": "11:00",
       "round": "1",
+      "venue": "",
       "note": ""
     },
     {
@@ -60,7 +62,9 @@
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-10-17",
+      "time": "",
       "round": "1",
+      "venue": "Polideportivo Beti-Ondo Calle Ongaray, s/n, 48260 Ermua, Bizkaia",
       "note": ""
     },
     {
@@ -70,7 +74,9 @@
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-10-17",
+      "time": "09:00",
       "round": "1",
+      "venue": " Colegio Escolapios Bilbao Alameda de Recalde, 19, 48009 Bilbao.",
       "note": ""
     },
     {
@@ -79,8 +85,10 @@
       "awayId": "71nkmt0s",
       "homeGoals": null,
       "awayGoals": null,
-      "date": "2026-10-17",
+      "date": "2026-10-16",
+      "time": "17:00",
       "round": "1",
+      "venue": "CEIP Kukullaga HLHI (Colegio Público Kukullaga) Calle Mariví Iturbe, 1, 48450 Etxebarri, Bizkaia",
       "note": ""
     },
     {
@@ -90,7 +98,9 @@
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-10-17",
+      "time": "09:15",
       "round": "1",
+      "venue": "CEIP Kukullaga HLHI (Colegio Público Kukullaga) Calle Mariví Iturbe, 1, 48450 Etxebarri, Bizkaia",
       "note": ""
     }
   ],
