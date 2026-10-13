@@ -85,14 +85,6 @@
     display:block;
   }
 
-  @media (min-width: 900px){
-    .venue-address{
-      display:block;
-    }
-    .venue-toggle{
-      display:none;
-    }
-  }
 
 </style>
 </head>
@@ -110,6 +102,13 @@
       </div>
 
       <div>
+        <label class="muted" for="groupFilter"><b>Grupo</b></label><br>
+        <select id="groupFilter" style="margin-bottom:8px">
+          <option value="A">Grupo A</option>
+          <option value="B" selected>Grupo B</option>
+          <option value="C">Grupo C</option>
+        </select><br>
+
         <label class="muted" for="teamFilter">
           <b>Filtrar partidos por equipo</b>
         </label><br>
@@ -153,7 +152,7 @@
 
   <footer class="muted">
     Vista solo lectura. Los datos provienen del archivo <code>liga.json</code>.
-    <br>Versión: <b>2026.10.12.3</b>
+    <br>Versión: <b>2026.10.13.1</b>
   </footer>
 </div>
 
@@ -164,9 +163,24 @@
 
   const $ = s => document.querySelector(s);
   let data = null;
+  let activeGroup = "B";
+
+  function normalizeGroup(value){
+    const g = String(value || "B").toUpperCase();
+    return ["A","B","C"].includes(g) ? g : "B";
+  }
+
+  function teamGroup(t){
+    return normalizeGroup(t?.group);
+  }
+
+  function matchGroup(m){
+    return normalizeGroup(m?.group);
+  }
 
   function getSortedTeams(){
     return (data?.teams || [])
+      .filter(t => teamGroup(t) === activeGroup)
       .slice()
       .sort((a,b)=>a.name.localeCompare(b.name,"es",{sensitivity:"base"}));
   }
@@ -182,15 +196,15 @@
   function getTeamLogo(name){
     const n = normalizeTeamName(name);
 
-    if(n.includes("AMPA BZG KUKULLAGA IKAS")) return "logos/bzg.png?v=2026.10.12.3";
-    if(n.includes("ANAITASUNA IKASTOLA")) return "logos/anaitasuna_club.png?v=2026.10.12.3";
-    if(n.includes("EBB COOP BASAURI")) return "logos/coop_basauri.png?v=2026.10.12.3";
-    if(n === "ARANGOITI") return "logos/arangoiti.png?v=2026.10.12.3";
-    if(n.includes("BELTZAGORRI")) return "logos/beltzagorri.png?v=2026.10.12.3";
-    if(n.includes("ESCOLAPIOS")) return "logos/escolapios.png?v=2026.10.12.3";
-    if(n.includes("ESKOLABARRI")) return "logos/eskolabarri.png?v=2026.10.12.3";
-    if(n.includes("KUKULLAGA ETXEBARRI")) return "logos/kukullaga.png?v=2026.10.12.3";
-    if(n.includes("LOYOLA INDAUTXU")) return "logos/loyola.png?v=2026.10.12.3";
+    if(n.includes("AMPA BZG KUKULLAGA IKAS")) return "logos/bzg.png?v=2026.10.13.1";
+    if(n.includes("ANAITASUNA IKASTOLA")) return "logos/anaitasuna_club.png?v=2026.10.13.1";
+    if(n.includes("EBB COOP BASAURI")) return "logos/coop_basauri.png?v=2026.10.13.1";
+    if(n === "ARANGOITI") return "logos/arangoiti.png?v=2026.10.13.1";
+    if(n.includes("BELTZAGORRI")) return "logos/beltzagorri.png?v=2026.10.13.1";
+    if(n.includes("ESCOLAPIOS")) return "logos/escolapios.png?v=2026.10.13.1";
+    if(n.includes("ESKOLABARRI")) return "logos/eskolabarri.png?v=2026.10.13.1";
+    if(n.includes("KUKULLAGA ETXEBARRI")) return "logos/kukullaga.png?v=2026.10.13.1";
+    if(n.includes("LOYOLA INDAUTXU")) return "logos/loyola.png?v=2026.10.13.1";
 
     return "";
   }
@@ -237,8 +251,8 @@
     if(!data) return [];
 
     const map = new Map();
-    const teams = data.teams || [];
-    const matches = data.matches || [];
+    const teams = (data.teams || []).filter(t => teamGroup(t) === activeGroup);
+    const matches = (data.matches || []).filter(m => matchGroup(m) === activeGroup);
 
     const ptsW = Number(data.pointsWin ?? 3);
     const ptsD = Number(data.pointsDraw ?? 1);
@@ -366,40 +380,10 @@
     return (match.mapsUrl || "").trim() || (home?.mapsUrl || "").trim();
   }
 
-  function splitVenue(venue){
+  function shortVenue(venue){
     const text = (venue || "").trim();
-    if(!text) return { name:"", address:"" };
-
-    const patterns = [
-      /\s+(Calle|C\/|Carrer|Kalea|Avenida|Av\.|Alameda|Zumarkalea|Plaza|Paseo|Camino|Carretera|Barrio)\b/i,
-      /,\s*(\d{5})\b/
-    ];
-
-    let idx = -1;
-    for(const p of patterns){
-      const m = text.match(p);
-      if(m && m.index > 0){
-        idx = m.index;
-        break;
-      }
-    }
-
-    if(idx > 0){
-      return {
-        name: text.slice(0, idx).trim().replace(/[,.]$/, ""),
-        address: text.slice(idx).trim().replace(/^,\s*/, "")
-      };
-    }
-
-    const comma = text.indexOf(",");
-    if(comma > 0){
-      return {
-        name: text.slice(0, comma).trim(),
-        address: text.slice(comma + 1).trim()
-      };
-    }
-
-    return { name:text, address:"" };
+    if(text.length <= 30) return text;
+    return text.slice(0, 30).trimEnd() + "…";
   }
 
   function escapeHtml(s){
@@ -412,21 +396,19 @@
 
   function venueHtml(match){
     const venue = getEffectiveVenue(match);
-    const parts = splitVenue(venue);
-    if(!parts.name && !parts.address) return "";
+    if(!venue) return "";
 
     const id = "addr_" + match.id;
-    const toggle = parts.address
-      ? `<button class="venue-toggle" type="button" data-target="${id}">Ver dirección</button>`
-      : "";
+    const shortText = shortVenue(venue);
+    const needsToggle = venue.trim().length > 30;
 
     return `
       <div class="venue-wrap">
         <div class="venue-top">
-          <span class="venue-name">${escapeHtml(parts.name)}</span>
-          ${toggle}
+          <span class="venue-name">${escapeHtml(shortText)}</span>
+          ${needsToggle ? `<button class="venue-toggle" type="button" data-target="${id}">Ver dirección</button>` : ""}
         </div>
-        ${parts.address ? `<div class="venue-address" id="${id}">${escapeHtml(parts.address)}</div>` : ""}
+        ${needsToggle ? `<div class="venue-address" id="${id}">${escapeHtml(venue)}</div>` : ""}
       </div>
     `;
   }
@@ -443,8 +425,8 @@
     }
 
     const teamId = $("#teamFilter").value;
-    const teams = data.teams || [];
-    const matches = (data.matches || []).slice();
+    const teams = (data.teams || []).filter(t => teamGroup(t) === activeGroup);
+    const matches = (data.matches || []).filter(m => matchGroup(m) === activeGroup).slice();
 
     matches.sort((a,b)=>{
       const da = a.date || "";
@@ -524,7 +506,7 @@
     if(!data) return;
 
     $("#seasonEnd").style.display = data.seasonFinished ? "block" : "none";
-    $("#leagueTitle").textContent = data.leagueName || "Liga de balonmano";
+    $("#leagueTitle").textContent = `${data.leagueName || "Liga de balonmano"} · Grupo ${activeGroup}`;
 
     const w = data.pointsWin ?? 3;
     const d = data.pointsDraw ?? 1;
@@ -562,6 +544,12 @@
   }
 
   $("#teamFilter").addEventListener("change", renderMatches);
+
+  $("#groupFilter").addEventListener("change", e => {
+    activeGroup = normalizeGroup(e.target.value);
+    $("#teamFilter").value = "";
+    renderAll();
+  });
 
   loadData();
 
