@@ -299,17 +299,17 @@
     },
     {
       "id": "d2bn6xtr",
+      "group": "B",
       "homeId": "71nkmt0s",
       "awayId": "rw5jbhwc",
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-10-24",
-      "time": "",
+      "time": "09:00",
       "round": "2",
       "venue": "",
       "mapsUrl": "",
-      "note": "",
-      "group": "B"
+      "note": ""
     },
     {
       "id": "o12tuf01",
@@ -327,17 +327,17 @@
     },
     {
       "id": "8labqlb8",
+      "group": "B",
       "homeId": "3kgh06oc",
       "awayId": "oo5teqc9",
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-10-24",
-      "time": "",
+      "time": "11:15",
       "round": "2",
       "venue": "",
       "mapsUrl": "",
-      "note": "",
-      "group": "B"
+      "note": ""
     },
     {
       "id": "gbso0xso",
@@ -2486,8 +2486,8 @@
       "group": "C",
       "homeId": "foyweu7y",
       "awayId": "935kf2cx",
-      "homeGoals": null,
-      "awayGoals": null,
+      "homeGoals": 4,
+      "awayGoals": 0,
       "date": "2026-10-17",
       "time": "",
       "round": "1",
@@ -2500,8 +2500,8 @@
       "group": "C",
       "homeId": "q38tqy6z",
       "awayId": "dpqrsd2r",
-      "homeGoals": null,
-      "awayGoals": null,
+      "homeGoals": 3,
+      "awayGoals": 0,
       "date": "2026-10-17",
       "time": "",
       "round": "1",
