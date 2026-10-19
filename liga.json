@@ -243,17 +243,17 @@
     },
     {
       "id": "4mekdoww",
+      "group": "B",
       "homeId": "oo5teqc9",
       "awayId": "71nkmt0s",
-      "homeGoals": null,
-      "awayGoals": null,
+      "homeGoals": 2,
+      "awayGoals": 2,
       "date": "2026-10-16",
       "time": "17:00",
       "round": "1",
       "venue": "CEIP Kukullaga HLHI (Colegio Público Kukullaga) Calle Mariví Iturbe, 1, 48450 Etxebarri, Bizkaia",
-      "note": "",
-      "group": "B",
-      "mapsUrl": ""
+      "mapsUrl": "",
+      "note": "El acta no se ajusta a la realidad quedaron 4-0"
     },
     {
       "id": "yd1etljx",
@@ -271,31 +271,31 @@
     },
     {
       "id": "cxr7lptl",
+      "group": "B",
       "homeId": "00s7tl9q",
       "awayId": "h6pwlpi0",
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-10-24",
-      "time": "",
+      "time": "11:30",
       "round": "2",
       "venue": "",
       "mapsUrl": "",
-      "note": "",
-      "group": "B"
+      "note": ""
     },
     {
       "id": "n82b9j4r",
+      "group": "B",
       "homeId": "4p19r1ml",
       "awayId": "ixv0utkj",
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-10-24",
-      "time": "",
+      "time": "10:00",
       "round": "2",
       "venue": "",
       "mapsUrl": "",
-      "note": "",
-      "group": "B"
+      "note": ""
     },
     {
       "id": "d2bn6xtr",
@@ -313,17 +313,17 @@
     },
     {
       "id": "o12tuf01",
+      "group": "B",
       "homeId": "aqalccxc",
       "awayId": "gqock8b8",
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-10-24",
-      "time": "",
+      "time": "09:15",
       "round": "2",
       "venue": "",
       "mapsUrl": "",
-      "note": "",
-      "group": "B"
+      "note": ""
     },
     {
       "id": "8labqlb8",
@@ -2472,8 +2472,8 @@
       "group": "C",
       "homeId": "555luz2o",
       "awayId": "oxhkmzqp",
-      "homeGoals": null,
-      "awayGoals": null,
+      "homeGoals": 0,
+      "awayGoals": 4,
       "date": "2026-10-17",
       "time": "",
       "round": "1",
