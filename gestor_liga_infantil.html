@@ -199,6 +199,12 @@
             margin: 18px 0
         }
 
+
+        .match-highlight {
+            background: #fff6bf !important;
+            transition: background 1.6s ease;
+        }
+
         @media (max-width:720px) {
             .grid-3, .grid-4 {
                 grid-template-columns: repeat(2,minmax(0,1fr))
@@ -216,18 +222,6 @@
                     Importar
                     <input id="fileImport" type="file" accept="application/json" style="display:none">
                 </label>
-            </div>
-        </div>
-
-        <div class="card" style="padding:10px 14px">
-            <div class="row">
-                <label for="groupSelect"><b>Grupo:</b></label>
-                <select id="groupSelect">
-                    <option value="A">Grupo A</option>
-                    <option value="B" selected>Grupo B</option>
-                    <option value="C">Grupo C</option>
-                </select>
-                <span class="muted">Solo se muestran y editan los equipos y partidos del grupo seleccionado.</span>
             </div>
         </div>
 
@@ -249,7 +243,7 @@
         </section>
 
         <section id="view-partidos" class="card" style="display:none">
-            <h2 style="margin-top:0">Partidos y resultados</h2>
+            <h2 id="matchFormTop" style="margin-top:0">Partidos y resultados</h2>
             <div class="grid grid-4" style="margin-bottom:10px">
                 <div><label>Local</label><select id="homeId"></select></div>
                 <div><label>Visitante</label><select id="awayId"></select></div>
@@ -351,28 +345,13 @@
                 pointsWin: 3,
                 pointsDraw: 1,
                 pointsLoss: 0,
-                editingMatchId: null,
-                activeGroup: "B"
+                editingMatchId: null
             };
 
             function uid() { return Math.random().toString(36).slice(2, 10); }
 
-            function normalizeGroup(value) {
-                const g = String(value || "B").toUpperCase();
-                return ["A","B","C"].includes(g) ? g : "B";
-            }
-
-            function teamGroup(t) {
-                return normalizeGroup(t?.group);
-            }
-
-            function matchGroup(m) {
-                return normalizeGroup(m?.group);
-            }
-
             function getSortedTeams() {
                 return state.teams
-                    .filter(t => teamGroup(t) === state.activeGroup)
                     .slice()
                     .sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }));
             }
@@ -413,10 +392,9 @@
             function renderTeams() {
                 const list = $("#teamsList");
                 list.innerHTML = "";
-                const groupTeams = getSortedTeams();
-                $("#noTeamsMsg").style.display = groupTeams.length ? "none" : "block";
+                $("#noTeamsMsg").style.display = state.teams.length ? "none" : "block";
 
-                groupTeams.forEach(t => {
+                getSortedTeams().forEach(t => {
                     const row = document.createElement("div");
                     row.className = "row card";
                     row.style.padding = "10px";
@@ -517,9 +495,7 @@
                 const tb = $("#matchesTable tbody");
                 tb.innerHTML = "";
 
-                const groupMatches = state.matches.filter(m => matchGroup(m) === state.activeGroup);
-
-                if (groupMatches.length === 0) {
+                if (state.matches.length === 0) {
                     const tr = document.createElement("tr");
                     const td = document.createElement("td");
                     td.colSpan = 10;
@@ -530,10 +506,11 @@
                     return;
                 }
 
-                groupMatches.forEach(m => {
+                state.matches.forEach(m => {
                     const home = state.teams.find(t => t.id === m.homeId)?.name || "?";
                     const away = state.teams.find(t => t.id === m.awayId)?.name || "?";
                     const tr = document.createElement("tr");
+                    tr.dataset.matchId = m.id;
                     const score = (m.homeGoals == null || m.awayGoals == null) ? "- : -" : (m.homeGoals + " : " + m.awayGoals);
 
                     tr.innerHTML = `
@@ -575,6 +552,14 @@
                     $("#btnSaveMatch").textContent = "Guardar cambios";
                     $("#btnCancelEdit").style.display = "";
                     document.querySelector('[data-tab="partidos"]').click();
+
+                    // Llevar el formulario a la vista para editar resultado / horario.
+                    requestAnimationFrame(() => {
+                        $("#matchFormTop")?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                        });
+                    });
                 }));
 
                 $$(".btnDelMatch").forEach(b => b.addEventListener("click", () => {
@@ -590,15 +575,11 @@
             function computeStandings() {
                 const map = new Map();
 
-                state.teams
-                    .filter(t => teamGroup(t) === state.activeGroup)
-                    .forEach(t => {
+                state.teams.forEach(t => {
                     map.set(t.id, { teamId: t.id, team: t.name, PJ: 0, G: 0, E: 0, P: 0, GF: 0, GC: 0, DG: 0, Pts: 0 });
                 });
 
-                state.matches
-                    .filter(m => matchGroup(m) === state.activeGroup)
-                    .forEach(m => {
+                state.matches.forEach(m => {
                     if (!map.has(m.homeId) || !map.has(m.awayId)) return;
                     if (m.homeGoals == null || m.awayGoals == null) return;
 
@@ -681,28 +662,16 @@
                     saveState();
                 });
 
-                $("#groupSelect").addEventListener("change", e => {
-                    state.activeGroup = normalizeGroup(e.target.value);
-                    state.editingMatchId = null;
-                    $("#btnSaveMatch").textContent = "Añadir partido";
-                    $("#btnCancelEdit").style.display = "none";
-                    saveState();
-                    renderTeams();
-                    renderMatchesSelectors();
-                    renderMatchesTable();
-                    renderStandings();
-                });
-
                 $("#btnAddTeam").addEventListener("click", () => {
                     const name = $("#newTeamName").value.trim();
                     if (!name) return;
 
-                    if (state.teams.some(t => teamGroup(t) === state.activeGroup && t.name.toLowerCase() === name.toLowerCase())) {
+                    if (state.teams.some(t => t.name.toLowerCase() === name.toLowerCase())) {
                         alert("Ese equipo ya existe.");
                         return;
                     }
 
-                    state.teams.push({ id: uid(), name, group: state.activeGroup, venue: "", mapsUrl: "" });
+                    state.teams.push({ id: uid(), name, venue: "", mapsUrl: "" });
                     $("#newTeamName").value = "";
                     saveState();
                     renderTeams();
@@ -732,7 +701,6 @@
 
                     const payload = {
                         id: state.editingMatchId || uid(),
-                        group: state.activeGroup,
                         homeId,
                         awayId,
                         homeGoals: hg,
@@ -744,6 +712,8 @@
                         mapsUrl: $("#matchMapsUrl").value || "",
                         note: $("#matchNote").value || ""
                     };
+
+                    const savedMatchId = payload.id;
 
                     if (state.editingMatchId) {
                         state.matches = state.matches.map(m => m.id === state.editingMatchId ? payload : m);
@@ -769,6 +739,24 @@
                     saveState();
                     renderMatchesTable();
                     renderStandings();
+
+                    // Volver al partido que acabamos de guardar.
+                    requestAnimationFrame(() => {
+                        const row = Array.from(
+                            document.querySelectorAll("#matchesTable tbody tr[data-match-id]")
+                        ).find(tr => tr.dataset.matchId === savedMatchId);
+
+                        if (row) {
+                            row.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center"
+                            });
+
+                            // Resaltado breve para localizarlo visualmente.
+                            row.classList.add("match-highlight");
+                            setTimeout(() => row.classList.remove("match-highlight"), 1800);
+                        }
+                    });
                 });
 
                 $("#btnCancelEdit").addEventListener("click", () => {
@@ -807,11 +795,10 @@
                 });
 
                 $("#btnReset").addEventListener("click", () => {
-                    if (!confirm(`Esto borrará los equipos y partidos del Grupo ${state.activeGroup}. ¿Seguro?`)) return;
+                    if (!confirm("Esto borrará todos los equipos y partidos. ¿Seguro?")) return;
 
-                    const ids = new Set(state.teams.filter(t => teamGroup(t) === state.activeGroup).map(t => t.id));
-                    state.matches = state.matches.filter(m => matchGroup(m) !== state.activeGroup);
-                    state.teams = state.teams.filter(t => !ids.has(t.id));
+                    state.teams = [];
+                    state.matches = [];
                     saveState();
 
                     renderTeams();
@@ -847,13 +834,11 @@
                         state.leagueName = s.leagueName || state.leagueName;
                         state.teams = Array.isArray(s.teams) ? s.teams.map(t => ({
                             ...t,
-                            group: normalizeGroup(t.group),
                             venue: t.venue || "",
                             mapsUrl: t.mapsUrl || ""
                         })) : [];
                         state.matches = Array.isArray(s.matches) ? s.matches.map(m => ({
                             ...m,
-                            group: normalizeGroup(m.group),
                             time: m.time || "",
                             venue: m.venue || "",
                             mapsUrl: m.mapsUrl || ""
@@ -866,8 +851,6 @@
                         saveState();
 
                         renderLeagueHeader();
-                        state.activeGroup = normalizeGroup(state.activeGroup);
-                        $("#groupSelect").value = state.activeGroup;
                         $("#ptsWin").value = state.pointsWin;
                         $("#ptsDraw").value = state.pointsDraw;
                         $("#ptsLoss").value = state.pointsLoss;
@@ -888,12 +871,10 @@
 
             function init() {
                 loadState();
-                state.activeGroup = normalizeGroup(state.activeGroup);
                 renderLeagueHeader();
                 bindTabs();
                 wireEvents();
 
-                $("#groupSelect").value = state.activeGroup;
                 $("#ptsWin").value = state.pointsWin;
                 $("#ptsDraw").value = state.pointsDraw;
                 $("#ptsLoss").value = state.pointsLoss;
