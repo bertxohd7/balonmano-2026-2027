@@ -150,6 +150,8 @@
     </div>
   </header>
 
+  <div id="withdrawnDebug" class="card" style="border-left:5px solid #c62828;display:none"></div>
+
   <section class="card">
     <h2 style="margin-top:0">Clasificación</h2>
     <div style="overflow:auto">
@@ -190,7 +192,7 @@
 
   <footer class="muted">
     Vista solo lectura. Los datos provienen del archivo <code>liga.json</code>.
-    <br>Versión: <b>2026.11.17.2 - Retirados</b>
+    <br>Versión: <b>2026.11.17.5 - Diagnóstico retirados</b>
   </footer>
 </div>
 
@@ -230,6 +232,27 @@
       .replace(/[\u0300-\u036f]/g,"")
       .toUpperCase()
       .trim();
+  }
+
+  function isTruthyWithdrawn(value){
+    return value === true ||
+           value === 1 ||
+           String(value).trim().toLowerCase() === "true" ||
+           String(value).trim().toLowerCase() === "yes" ||
+           String(value).trim().toLowerCase() === "si" ||
+           String(value).trim().toLowerCase() === "sí";
+  }
+
+  function isTeamWithdrawn(teamId, teamName){
+    const targetName = normalizeTeamName(teamName);
+
+    return (data?.teams || []).some(t => {
+      if(teamGroup(t) !== activeGroup) return false;
+      if(!isTruthyWithdrawn(t.withdrawn)) return false;
+
+      return String(t.id) === String(teamId) ||
+             normalizeTeamName(t.name) === targetName;
+    });
   }
 
   function getTeamLogo(name){
@@ -301,7 +324,7 @@
       map.set(t.id,{
         teamId:t.id,
         team:t.name,
-        withdrawn:t.withdrawn === true,
+        withdrawn:isTeamWithdrawn(t.id, t.name),
         PJ:0,G:0,E:0,P:0,GF:0,GC:0,DG:0,Pts:0
       });
     });
@@ -340,13 +363,24 @@
       }
     });
 
-    const arr = Array.from(map.values()).sort((a,b)=>{
-      if(a.withdrawn !== b.withdrawn) return a.withdrawn ? 1 : -1;
+    const sortNormal = (a,b)=>{
       if(b.Pts !== a.Pts) return b.Pts - a.Pts;
       if(b.DG !== a.DG) return b.DG - a.DG;
       if(b.GF !== a.GF) return b.GF - a.GF;
       return a.team.localeCompare(b.team,"es",{sensitivity:"base"});
-    });
+    };
+
+    const allRows = Array.from(map.values());
+
+    const activeRows = allRows
+      .filter(r => r.withdrawn !== true)
+      .sort(sortNormal);
+
+    const withdrawnRows = allRows
+      .filter(r => r.withdrawn === true)
+      .sort(sortNormal);
+
+    const arr = [...activeRows, ...withdrawnRows];
 
     return arr.map((r,i)=>Object.assign({Pos:i+1},r));
   }
@@ -381,11 +415,13 @@
         else if(r.Pos === 3) posText = "🥉 3";
       }
 
+      const isWithdrawn = isTeamWithdrawn(r.teamId, r.team);
+
       tr.innerHTML = `
         <td>${posText}</td>
-        <td class="${r.withdrawn ? 'withdrawn-team' : ''}">
+        <td class="${isWithdrawn ? 'withdrawn-team' : ''}">
           ${teamNameWithLogo(r.team)}
-          ${r.withdrawn ? '<span class="withdrawn-label">(Retirado)</span>' : ''}
+          ${isWithdrawn ? '<span class="withdrawn-label">(Retirado)</span>' : ''}
         </td>
         <td>${r.PJ}</td>
         <td>${r.G}</td>
@@ -674,7 +710,26 @@
     })();
   }
 
+  function renderWithdrawnDebug(){
+    const box = $("#withdrawnDebug");
+    if(!box || !data) return;
+
+    const retired = (data.teams || [])
+      .filter(t => teamGroup(t) === activeGroup && isTruthyWithdrawn(t.withdrawn));
+
+    if(retired.length === 0){
+      box.style.display = "";
+      box.innerHTML = `<b>Diagnóstico:</b> este viewer NO detecta ningún equipo retirado en el Grupo ${activeGroup}.`;
+      return;
+    }
+
+    box.style.display = "";
+    box.innerHTML = `<b>Diagnóstico:</b> retirados detectados en Grupo ${activeGroup}: ` +
+      retired.map(t => `${escapeHtml(t.name)} [${escapeHtml(String(t.id))}]`).join(", ");
+  }
+
   function renderAll(){
+    renderWithdrawnDebug();
     renderHeader();
     renderTeamFilter();
     renderStandings();
