@@ -85,6 +85,35 @@
     display:block;
   }
 
+  .round-toolbar{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:12px;
+  }
+
+  .round-btn{
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--fg);
+    padding:7px 11px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:700;
+  }
+
+  .round-btn.active{
+    background:#111;
+    color:#fff;
+    border-color:#111;
+  }
+
+  .round-label{
+    font-weight:800;
+    margin-right:auto;
+  }
+
 
 </style>
 </head>
@@ -137,6 +166,13 @@
 
   <section class="card">
     <h2 style="margin-top:0">Partidos</h2>
+
+    <div class="round-toolbar">
+      <div id="currentRoundLabel" class="round-label">Jornada actual</div>
+      <button id="btnCurrentRound" class="round-btn active" type="button">Jornada actual</button>
+      <button id="btnAllMatches" class="round-btn" type="button">Ver todos</button>
+    </div>
+
     <div style="overflow:auto">
       <table id="tableMatches">
         <thead>
@@ -164,6 +200,7 @@
   const $ = s => document.querySelector(s);
   let data = null;
   let activeGroup = "B";
+  let showAllMatches = false;
 
   function normalizeGroup(value){
     const g = String(value || "B").toUpperCase();
@@ -413,6 +450,91 @@
     `;
   }
 
+
+  function toLocalDateOnly(isoDate){
+    if(!isoDate) return null;
+    const [y,m,d] = isoDate.split("-").map(Number);
+    if(!y || !m || !d) return null;
+    return new Date(y, m - 1, d);
+  }
+
+  function todayLocalMidnight(){
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  function getGroupMatches(){
+    if(!data) return [];
+    return (data.matches || [])
+      .filter(m => matchGroup(m) === activeGroup)
+      .slice();
+  }
+
+  function getCurrentRound(){
+    const matches = getGroupMatches();
+    const today = todayLocalMidnight();
+
+    const rounds = new Map();
+
+    matches.forEach(m=>{
+      const round = String(m.round ?? "").trim();
+      if(!round) return;
+
+      const d = toLocalDateOnly(m.date);
+      if(!rounds.has(round)){
+        rounds.set(round, {round, dates:[]});
+      }
+      if(d) rounds.get(round).dates.push(d);
+    });
+
+    const candidates = Array.from(rounds.values())
+      .filter(r => r.dates.length > 0)
+      .map(r => ({
+        round: r.round,
+        minDate: new Date(Math.min(...r.dates.map(d=>d.getTime()))),
+        maxDate: new Date(Math.max(...r.dates.map(d=>d.getTime())))
+      }))
+      // Jornada actual = primera cuya fecha máxima no ha quedado totalmente atrás.
+      .filter(r => r.maxDate >= today)
+      .sort((a,b)=>{
+        if(a.minDate.getTime() !== b.minDate.getTime()){
+          return a.minDate - b.minDate;
+        }
+        return String(a.round).localeCompare(String(b.round),"es",{numeric:true});
+      });
+
+    if(candidates.length){
+      return candidates[0].round;
+    }
+
+    // Si ya han pasado todas, mostrar la última jornada disputada.
+    const past = Array.from(rounds.values())
+      .filter(r => r.dates.length > 0)
+      .map(r => ({
+        round: r.round,
+        maxDate: new Date(Math.max(...r.dates.map(d=>d.getTime())))
+      }))
+      .sort((a,b)=>b.maxDate-a.maxDate);
+
+    return past.length ? past[0].round : "";
+  }
+
+  function updateRoundToolbar(){
+    const currentRound = getCurrentRound();
+    const label = $("#currentRoundLabel");
+    const btnCurrent = $("#btnCurrentRound");
+    const btnAll = $("#btnAllMatches");
+
+    if(label){
+      label.textContent = currentRound
+        ? `Jornada ${currentRound} · Grupo ${activeGroup}`
+        : `Grupo ${activeGroup}`;
+    }
+
+    btnCurrent?.classList.toggle("active", !showAllMatches);
+    btnAll?.classList.toggle("active", showAllMatches);
+  }
+
   function renderMatches(){
     const tb = $("#tableMatches tbody");
     const noMsg = $("#noMatchesMsg");
@@ -426,7 +548,13 @@
 
     const teamId = $("#teamFilter").value;
     const teams = (data.teams || []).filter(t => teamGroup(t) === activeGroup);
-    const matches = (data.matches || []).filter(m => matchGroup(m) === activeGroup).slice();
+    let matches = getGroupMatches();
+
+    const currentRound = getCurrentRound();
+
+    if(!showAllMatches && currentRound){
+      matches = matches.filter(m => String(m.round ?? "").trim() === String(currentRound));
+    }
 
     matches.sort((a,b)=>{
       const da = a.date || "";
@@ -445,6 +573,9 @@
       : matches;
 
     if(filtered.length === 0){
+      noMsg.textContent = showAllMatches
+        ? "No hay partidos registrados."
+        : "No hay partidos registrados para la jornada actual.";
       noMsg.style.display = "";
       return;
     }
@@ -540,6 +671,7 @@
     renderHeader();
     renderTeamFilter();
     renderStandings();
+    updateRoundToolbar();
     renderMatches();
   }
 
@@ -547,8 +679,21 @@
 
   $("#groupFilter").addEventListener("change", e => {
     activeGroup = normalizeGroup(e.target.value);
+    showAllMatches = false;
     $("#teamFilter").value = "";
     renderAll();
+  });
+
+  $("#btnCurrentRound").addEventListener("click", ()=>{
+    showAllMatches = false;
+    updateRoundToolbar();
+    renderMatches();
+  });
+
+  $("#btnAllMatches").addEventListener("click", ()=>{
+    showAllMatches = true;
+    updateRoundToolbar();
+    renderMatches();
   });
 
   loadData();
