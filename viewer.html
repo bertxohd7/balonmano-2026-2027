@@ -27,6 +27,8 @@
   .gold{background:#fff4c2}
   .silver{background:#eeeeee}
   .bronze{background:#f3d2b3}
+  .withdrawn-team{opacity:.68}
+  .withdrawn-label{font-size:12px;color:#a33;font-weight:700;margin-left:6px}
 
   .result-win{background:#d8f5dc}
   .result-draw{background:#fff3bf}
@@ -188,7 +190,7 @@
 
   <footer class="muted">
     Vista solo lectura. Los datos provienen del archivo <code>liga.json</code>.
-    <br>Versión: <b>2026.11.17.1 - Jornada actual</b>
+    <br>Versión: <b>2026.11.17.2 - Retirados</b>
   </footer>
 </div>
 
@@ -299,6 +301,7 @@
       map.set(t.id,{
         teamId:t.id,
         team:t.name,
+        withdrawn:t.withdrawn === true,
         PJ:0,G:0,E:0,P:0,GF:0,GC:0,DG:0,Pts:0
       });
     });
@@ -338,6 +341,7 @@
     });
 
     const arr = Array.from(map.values()).sort((a,b)=>{
+      if(a.withdrawn !== b.withdrawn) return a.withdrawn ? 1 : -1;
       if(b.Pts !== a.Pts) return b.Pts - a.Pts;
       if(b.DG !== a.DG) return b.DG - a.DG;
       if(b.GF !== a.GF) return b.GF - a.GF;
@@ -379,7 +383,10 @@
 
       tr.innerHTML = `
         <td>${posText}</td>
-        <td>${teamNameWithLogo(r.team)}</td>
+        <td class="${r.withdrawn ? 'withdrawn-team' : ''}">
+          ${teamNameWithLogo(r.team)}
+          ${r.withdrawn ? '<span class="withdrawn-label">(Retirado)</span>' : ''}
+        </td>
         <td>${r.PJ}</td>
         <td>${r.G}</td>
         <td>${r.E}</td>

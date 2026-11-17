@@ -225,6 +225,18 @@
             </div>
         </div>
 
+        <div class="card" style="padding:10px 14px">
+            <div class="row">
+                <label for="groupSelect"><b>Grupo:</b></label>
+                <select id="groupSelect">
+                    <option value="A">Grupo A</option>
+                    <option value="B" selected>Grupo B</option>
+                    <option value="C">Grupo C</option>
+                </select>
+                <span class="muted">Solo se muestran y editan los equipos y partidos del grupo seleccionado.</span>
+            </div>
+        </div>
+
         <nav class="tabs">
             <button class="tab active" data-tab="equipos">Equipos</button>
             <button class="tab" data-tab="partidos">Partidos</button>
@@ -345,13 +357,28 @@
                 pointsWin: 3,
                 pointsDraw: 1,
                 pointsLoss: 0,
-                editingMatchId: null
+                editingMatchId: null,
+                activeGroup: "B"
             };
 
             function uid() { return Math.random().toString(36).slice(2, 10); }
 
+            function normalizeGroup(value) {
+                const g = String(value || "B").toUpperCase();
+                return ["A","B","C"].includes(g) ? g : "B";
+            }
+
+            function teamGroup(t) {
+                return normalizeGroup(t?.group);
+            }
+
+            function matchGroup(m) {
+                return normalizeGroup(m?.group);
+            }
+
             function getSortedTeams() {
                 return state.teams
+                    .filter(t => teamGroup(t) === state.activeGroup)
                     .slice()
                     .sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }));
             }
@@ -392,9 +419,10 @@
             function renderTeams() {
                 const list = $("#teamsList");
                 list.innerHTML = "";
-                $("#noTeamsMsg").style.display = state.teams.length ? "none" : "block";
+                const groupTeams = getSortedTeams();
+                $("#noTeamsMsg").style.display = groupTeams.length ? "none" : "block";
 
-                getSortedTeams().forEach(t => {
+                groupTeams.forEach(t => {
                     const row = document.createElement("div");
                     row.className = "row card";
                     row.style.padding = "10px";
@@ -411,6 +439,13 @@
             <div style="flex:2;min-width:280px">
               <label>Enlace Google Maps</label>
               <input data-id="${t.id}" class="inpTeamMaps" value="${(t.mapsUrl || "").replace(/"/g, '&quot;')}" placeholder="https://maps.google.com/..." style="width:100%">
+            </div>
+            <div style="min-width:110px">
+              <label>Estado</label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--fg);margin:0">
+                <input type="checkbox" data-id="${t.id}" class="chkWithdrawn" ${t.withdrawn ? "checked" : ""}>
+                Retirado
+              </label>
             </div>
             <button data-id="${t.id}" class="btnDelete">Borrar</button>
           `;
@@ -449,6 +484,18 @@
                         if (t) {
                             t.mapsUrl = e.target.value;
                             saveState();
+                        }
+                    });
+                });
+
+                $$(".chkWithdrawn").forEach(inp => {
+                    inp.addEventListener("change", (e) => {
+                        const id = e.target.getAttribute("data-id");
+                        const t = state.teams.find(x => x.id === id);
+                        if (t) {
+                            t.withdrawn = e.target.checked;
+                            saveState();
+                            renderStandings();
                         }
                     });
                 });
@@ -495,7 +542,9 @@
                 const tb = $("#matchesTable tbody");
                 tb.innerHTML = "";
 
-                if (state.matches.length === 0) {
+                const groupMatches = state.matches.filter(m => matchGroup(m) === state.activeGroup);
+
+                if (groupMatches.length === 0) {
                     const tr = document.createElement("tr");
                     const td = document.createElement("td");
                     td.colSpan = 10;
@@ -506,7 +555,7 @@
                     return;
                 }
 
-                state.matches.forEach(m => {
+                groupMatches.forEach(m => {
                     const home = state.teams.find(t => t.id === m.homeId)?.name || "?";
                     const away = state.teams.find(t => t.id === m.awayId)?.name || "?";
                     const tr = document.createElement("tr");
@@ -553,7 +602,6 @@
                     $("#btnCancelEdit").style.display = "";
                     document.querySelector('[data-tab="partidos"]').click();
 
-                    // Llevar el formulario a la vista para editar resultado / horario.
                     requestAnimationFrame(() => {
                         $("#matchFormTop")?.scrollIntoView({
                             behavior: "smooth",
@@ -575,11 +623,15 @@
             function computeStandings() {
                 const map = new Map();
 
-                state.teams.forEach(t => {
+                state.teams
+                    .filter(t => teamGroup(t) === state.activeGroup)
+                    .forEach(t => {
                     map.set(t.id, { teamId: t.id, team: t.name, PJ: 0, G: 0, E: 0, P: 0, GF: 0, GC: 0, DG: 0, Pts: 0 });
                 });
 
-                state.matches.forEach(m => {
+                state.matches
+                    .filter(m => matchGroup(m) === state.activeGroup)
+                    .forEach(m => {
                     if (!map.has(m.homeId) || !map.has(m.awayId)) return;
                     if (m.homeGoals == null || m.awayGoals == null) return;
 
@@ -662,16 +714,28 @@
                     saveState();
                 });
 
+                $("#groupSelect").addEventListener("change", e => {
+                    state.activeGroup = normalizeGroup(e.target.value);
+                    state.editingMatchId = null;
+                    $("#btnSaveMatch").textContent = "Añadir partido";
+                    $("#btnCancelEdit").style.display = "none";
+                    saveState();
+                    renderTeams();
+                    renderMatchesSelectors();
+                    renderMatchesTable();
+                    renderStandings();
+                });
+
                 $("#btnAddTeam").addEventListener("click", () => {
                     const name = $("#newTeamName").value.trim();
                     if (!name) return;
 
-                    if (state.teams.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+                    if (state.teams.some(t => teamGroup(t) === state.activeGroup && t.name.toLowerCase() === name.toLowerCase())) {
                         alert("Ese equipo ya existe.");
                         return;
                     }
 
-                    state.teams.push({ id: uid(), name, venue: "", mapsUrl: "" });
+                    state.teams.push({ id: uid(), name, group: state.activeGroup, venue: "", mapsUrl: "", withdrawn: false });
                     $("#newTeamName").value = "";
                     saveState();
                     renderTeams();
@@ -701,6 +765,7 @@
 
                     const payload = {
                         id: state.editingMatchId || uid(),
+                        group: state.activeGroup,
                         homeId,
                         awayId,
                         homeGoals: hg,
@@ -740,7 +805,6 @@
                     renderMatchesTable();
                     renderStandings();
 
-                    // Volver al partido que acabamos de guardar.
                     requestAnimationFrame(() => {
                         const row = Array.from(
                             document.querySelectorAll("#matchesTable tbody tr[data-match-id]")
@@ -752,7 +816,6 @@
                                 block: "center"
                             });
 
-                            // Resaltado breve para localizarlo visualmente.
                             row.classList.add("match-highlight");
                             setTimeout(() => row.classList.remove("match-highlight"), 1800);
                         }
@@ -795,10 +858,11 @@
                 });
 
                 $("#btnReset").addEventListener("click", () => {
-                    if (!confirm("Esto borrará todos los equipos y partidos. ¿Seguro?")) return;
+                    if (!confirm(`Esto borrará los equipos y partidos del Grupo ${state.activeGroup}. ¿Seguro?`)) return;
 
-                    state.teams = [];
-                    state.matches = [];
+                    const ids = new Set(state.teams.filter(t => teamGroup(t) === state.activeGroup).map(t => t.id));
+                    state.matches = state.matches.filter(m => matchGroup(m) !== state.activeGroup);
+                    state.teams = state.teams.filter(t => !ids.has(t.id));
                     saveState();
 
                     renderTeams();
@@ -834,11 +898,14 @@
                         state.leagueName = s.leagueName || state.leagueName;
                         state.teams = Array.isArray(s.teams) ? s.teams.map(t => ({
                             ...t,
+                            group: normalizeGroup(t.group),
                             venue: t.venue || "",
-                            mapsUrl: t.mapsUrl || ""
+                            mapsUrl: t.mapsUrl || "",
+                            withdrawn: t.withdrawn === true
                         })) : [];
                         state.matches = Array.isArray(s.matches) ? s.matches.map(m => ({
                             ...m,
+                            group: normalizeGroup(m.group),
                             time: m.time || "",
                             venue: m.venue || "",
                             mapsUrl: m.mapsUrl || ""
@@ -851,6 +918,8 @@
                         saveState();
 
                         renderLeagueHeader();
+                        state.activeGroup = normalizeGroup(state.activeGroup);
+                        $("#groupSelect").value = state.activeGroup;
                         $("#ptsWin").value = state.pointsWin;
                         $("#ptsDraw").value = state.pointsDraw;
                         $("#ptsLoss").value = state.pointsLoss;
@@ -871,10 +940,12 @@
 
             function init() {
                 loadState();
+                state.activeGroup = normalizeGroup(state.activeGroup);
                 renderLeagueHeader();
                 bindTabs();
                 wireEvents();
 
+                $("#groupSelect").value = state.activeGroup;
                 $("#ptsWin").value = state.pointsWin;
                 $("#ptsDraw").value = state.pointsDraw;
                 $("#ptsLoss").value = state.pointsLoss;
