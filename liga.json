@@ -566,17 +566,17 @@
     },
     {
       "id": "mvqnbjb4",
+      "group": "B",
       "homeId": "gqock8b8",
       "awayId": "oo5teqc9",
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-11-28",
-      "time": "",
+      "time": "12:00",
       "round": "6",
       "venue": "",
       "mapsUrl": "",
-      "note": "",
-      "group": "B"
+      "note": ""
     },
     {
       "id": "w4yxhx2s",
@@ -3481,5 +3481,5 @@
   "pointsDraw": 1,
   "pointsLoss": 0,
   "editingMatchId": null,
-  "activeGroup": "C"
+  "activeGroup": "B"
 }
