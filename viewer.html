@@ -117,6 +117,19 @@
   }
 
 
+
+  /* Cabecera: filtros a la izquierda y foto a la derecha. */
+  .header-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,40%);gap:20px;align-items:center}
+  .header-controls{min-width:0}
+  .header-controls #pointsInfo{margin-top:0;margin-bottom:24px}
+  .header-controls select{max-width:100%}
+  .header-photo{display:block;width:400px;max-width:100%;height:auto;border-radius:12px;justify-self:end}
+  .header-photo[hidden]{display:none}
+  @media(max-width:600px){
+    .header-layout{grid-template-columns:minmax(0,1fr);gap:16px}
+    .header-photo{width:min(100%,400px);justify-self:center}
+  }
+
 </style>
 </head>
 
@@ -126,13 +139,11 @@
   <header class="card">
     <div id="seasonEnd">🏆 Temporada finalizada</div>
 
-    <div class="flex">
-      <div>
-        <h1 id="leagueTitle">Liga de balonmano</h1>
+    <h1 id="leagueTitle">Liga de balonmano</h1>
+    <div class="header-layout">
+      <div class="header-controls">
         <p class="muted" id="pointsInfo"></p>
-      </div>
-
-      <div>
+        <div>
         <label class="muted" for="groupFilter"><b>Grupo</b></label><br>
         <select id="groupFilter" style="margin-bottom:8px">
           <option value="A">Grupo A</option>
@@ -146,7 +157,9 @@
         <select id="teamFilter">
           <option value="">Todos los equipos</option>
         </select>
+        </div>
       </div>
+      <img class="header-photo" src="img/cabecera.png" alt="Equipo de balonmano" width="1408" height="1056" onerror="this.hidden=true">
     </div>
   </header>
 
@@ -190,7 +203,7 @@
 
   <footer class="muted">
     Vista solo lectura. Los datos provienen del archivo <code>liga.json</code>.
-    <br>Versión: <b>2026.11.18.1 - Retirados</b>
+    <br>Versión: <b>2026.11.25.2 - Foto ampliada</b>
   </footer>
 </div>
 
