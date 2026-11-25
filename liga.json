@@ -580,17 +580,17 @@
     },
     {
       "id": "w4yxhx2s",
+      "group": "B",
       "homeId": "aqalccxc",
       "awayId": "71nkmt0s",
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-11-28",
-      "time": "",
+      "time": "11:00",
       "round": "6",
       "venue": "",
       "mapsUrl": "",
-      "note": "",
-      "group": "B"
+      "note": ""
     },
     {
       "id": "jc2thp1d",
@@ -2798,7 +2798,7 @@
       "homeGoals": null,
       "awayGoals": null,
       "date": "2026-11-28",
-      "time": "",
+      "time": "10:30",
       "round": "6",
       "venue": "",
       "mapsUrl": "",
@@ -3481,5 +3481,5 @@
   "pointsDraw": 1,
   "pointsLoss": 0,
   "editingMatchId": null,
-  "activeGroup": "B"
+  "activeGroup": "C"
 }
